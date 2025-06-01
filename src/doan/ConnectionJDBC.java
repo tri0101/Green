@@ -16,7 +16,7 @@ public class ConnectionJDBC {
     private static final String HOSTNAME = "LAPTOP-GLGO9P0T";
     private static final String PORT = "1521";
     private static final String SID = "orcl";
-    private static final String USERNAM = "citygreen2705";
+    private static final String USERNAM = "citygreen2805";
     private static final String PASSWORD = "abc";
     
     public static Connection getConnection() throws SQLException {

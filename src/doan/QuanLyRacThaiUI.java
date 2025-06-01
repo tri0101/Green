@@ -225,10 +225,8 @@ public class QuanLyRacThaiUI extends JFrame {
         sideBar.setPreferredSize(new Dimension(250, 0));
         sideBar.setBorder(new EmptyBorder(20, 10, 20, 10));
 
-        // Các nút menu
         String[] menuItems = {
             "Tổng quan",
-//            "Quản lý nhân viên điều phối",
             "Chủ thải",
             "Đơn vị thu gom",
             "Nhân viên thu gom",
@@ -291,7 +289,7 @@ public class QuanLyRacThaiUI extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
 
-        JLabel titleLabel = new JLabel("Quản lý phân công");
+        JLabel titleLabel = new JLabel("Quản lý thống kê phân công");
         titleLabel.setFont(titleFont);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -2183,45 +2181,6 @@ public class QuanLyRacThaiUI extends JFrame {
         }
     }
 
-//    private void showSearchPhanCongDialog(DefaultTableModel model) {
-//        String maPC = JOptionPane.showInputDialog(this, "Nhập mã phân công cần tìm:");
-//        if (maPC == null || maPC.trim().isEmpty()) {
-//            loadPhanCongData(model); // Just reload data if user cancels or input is empty
-//            return;
-//        }
-//
-//        try {
-//            Connection conn = ConnectionJDBC.getConnection();
-//            String sql = "SELECT * FROM PhanCong WHERE MaPC = ?";
-//            
-//            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-//                pstmt.setInt(1, Integer.parseInt(maPC.trim()));
-//                ResultSet rs = pstmt.executeQuery();
-//                
-//                if (rs.next()) {
-//                    // Clear existing table data
-//                    model.setRowCount(0);
-//                    
-//                    // Add the found record to the table
-//                    model.addRow(new Object[]{
-//                        rs.getInt("MaPC"),
-//                        rs.getInt("MaNvdp"),
-//                        rs.getInt("MaLich"),
-//                        rs.getInt("MaNvtg")
-//                    });
-//                } else {
-//                    JOptionPane.showMessageDialog(this, "Không tìm thấy phân công với mã " + maPC);
-//                    loadPhanCongData(model);
-//                }
-//            }
-//        } catch (NumberFormatException ex) {
-//            JOptionPane.showMessageDialog(this, "Mã phân công không hợp lệ!");
-//            loadPhanCongData(model);
-//        } catch (SQLException ex) {
-//            JOptionPane.showMessageDialog(this, "Lỗi khi tìm kiếm phân công: " + ex.getMessage());
-//            loadPhanCongData(model);
-//        }
-//    }
     private void showSearchPhanCongDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Tìm kiếm phân công", true);
         dialog.setLayout(new BorderLayout(10, 10));
@@ -2605,7 +2564,7 @@ public class QuanLyRacThaiUI extends JFrame {
         styleButton(searchButton);
         styleButton(refreshButton);
         styleButton(exportButton);
-        buttonPanel.add(viewDetailsButton);
+//        buttonPanel.add(viewDetailsButton);
         buttonPanel.add(searchButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(editButton);
@@ -4713,18 +4672,20 @@ public class QuanLyRacThaiUI extends JFrame {
         JButton editButton = new JButton("Sửa");
         JButton searchButton = new JButton("Tìm kiếm");
         JButton refreshButton = new JButton("Làm mới");
+        JButton exportButton = new JButton("Xuất excel");
 
         styleButton(addButton);
         styleButton(deleteButton);
         styleButton(editButton);
         styleButton(searchButton);
         styleButton(refreshButton);
-
+        styleButton(exportButton);
         buttonPanel.add(searchButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(editButton);
         buttonPanel.add(refreshButton);
 //        buttonPanel.add(addButton);
+        buttonPanel.add(exportButton);
 
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(buttonPanel, BorderLayout.EAST);
@@ -4789,19 +4750,20 @@ public class QuanLyRacThaiUI extends JFrame {
         JButton chiTietEditButton = new JButton("Sửa");
         JButton chiTietSearchButton = new JButton("Tìm kiếm");
         JButton chiTietRefreshButton = new JButton("Làm mới");
+        JButton chiTietExportButton = new JButton("Xuất excel");
 
         styleButton(chiTietAddButton);
         styleButton(chiTietDeleteButton);
         styleButton(chiTietEditButton);
         styleButton(chiTietSearchButton);
         styleButton(chiTietRefreshButton);
-
+        styleButton(chiTietExportButton);
         buttonContainer.add(chiTietSearchButton);
         buttonContainer.add(chiTietDeleteButton);
         buttonContainer.add(chiTietEditButton);
         buttonContainer.add(chiTietRefreshButton);
 //        buttonContainer.add(chiTietAddButton);
-
+        buttonContainer.add(chiTietExportButton);
         chiTietButtonPanel.add(chiTietLabel, BorderLayout.WEST);
         chiTietButtonPanel.add(buttonContainer, BorderLayout.EAST);
 
@@ -4842,7 +4804,7 @@ public class QuanLyRacThaiUI extends JFrame {
         });
         searchButton.addActionListener(e -> showSearchHopDongDialog(hopDongModel));
         refreshButton.addActionListener(e -> loadHopDongData(hopDongModel));
-
+        exportButton.addActionListener(e-> exportHopDongExcel(hopDongModel));
         // Add action listeners for ChiTietHopDong buttons
         chiTietAddButton.addActionListener(e -> {
             int selectedRow = hopDongTable.getSelectedRow();
@@ -4856,6 +4818,7 @@ public class QuanLyRacThaiUI extends JFrame {
             int selectedRow = chiTietTable.getSelectedRow();
             showDeleteChiTietHopDongDialog(chiTietModel, selectedRow);
         });
+        chiTietExportButton.addActionListener(e-> exportChiTietHopDongExcel(chiTietModel));
         chiTietEditButton.addActionListener(e -> {
             int selectedRow = chiTietTable.getSelectedRow();
             showEditChiTietHopDongDialog(chiTietModel, selectedRow);
@@ -4874,7 +4837,7 @@ public class QuanLyRacThaiUI extends JFrame {
 
         return panel;
     }
-
+   
     private void loadChiTietHopDongData(DefaultTableModel model, String maHopDong) {
         model.setRowCount(0); // Xóa dữ liệu cũ
         try {
@@ -5256,7 +5219,7 @@ public class QuanLyRacThaiUI extends JFrame {
 
                 String sql = "UPDATE ChiTietHopDong SET "
                         + "MaDichVu = ?, "
-                        + "DiaChiThuGom = ?, "
+//                        + "DiaChiThuGom = ?, "
                         + "KhoiLuong = ?, "
                         + "ThanhTien = ?, "
                         + "GhiChu = ? "
@@ -5566,9 +5529,26 @@ public class QuanLyRacThaiUI extends JFrame {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            // TODO: Thêm code xóa hợp đồng từ database
-            model.removeRow(selectedRow);
-            JOptionPane.showMessageDialog(this, "Xóa hợp đồng thành công!");
+            try {
+                // Xóa chi tiết hợp đồng trước
+                String deleteChiTietSQL = "DELETE FROM ChiTietHopDong WHERE MaHopDong = ?";
+                try (PreparedStatement pstmt = ConnectionJDBC.getConnection().prepareStatement(deleteChiTietSQL)) {
+                    pstmt.setString(1, maHopDong);
+                    pstmt.executeUpdate();
+                }
+
+                // Sau đó xóa hợp đồng
+                String deleteHopDongSQL = "DELETE FROM HopDong WHERE MaHopDong = ?";
+                try (PreparedStatement pstmt = ConnectionJDBC.getConnection().prepareStatement(deleteHopDongSQL)) {
+                    pstmt.setString(1, maHopDong);
+                    pstmt.executeUpdate();
+                }
+
+                model.removeRow(selectedRow);
+                JOptionPane.showMessageDialog(this, "Xóa hợp đồng thành công!");
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(this, "Lỗi khi xóa hợp đồng: " + ex.getMessage());
+            }
         }
     }
 

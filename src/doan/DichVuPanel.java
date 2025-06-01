@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
+import java.io.FileOutputStream;
 import javax.swing.border.EmptyBorder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +13,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ArrayList;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 public class DichVuPanel extends JPanel {
     private JTable table;
@@ -40,19 +46,19 @@ public class DichVuPanel extends JPanel {
         JButton editButton = new JButton("Sửa");
         JButton searchButton = new JButton("Tìm kiếm");
         JButton refreshButton = new JButton("Làm mới");
-        
+        JButton exportButton = new JButton("Xuất excel");
         styleButton(addButton);
         styleButton(deleteButton);
         styleButton(editButton);
         styleButton(searchButton);
         styleButton(refreshButton);
-        
+        styleButton(exportButton);
         buttonPanel.add(searchButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(editButton);
         buttonPanel.add(refreshButton);
         buttonPanel.add(addButton);
-        
+        buttonPanel.add(exportButton);
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(buttonPanel, BorderLayout.EAST);
 
@@ -89,6 +95,7 @@ public class DichVuPanel extends JPanel {
         });
         searchButton.addActionListener(e -> showSearchDialog());
         refreshButton.addActionListener(e -> loadData());
+        exportButton.addActionListener(e->exportDichVuExcel(model));
         
         add(headerPanel, BorderLayout.NORTH);
         add(scrollPane, BorderLayout.CENTER);
@@ -100,7 +107,60 @@ public class DichVuPanel extends JPanel {
         button.setFocusPainted(false);
         button.setBorderPainted(false);
     }
+    private void exportDichVuExcel(DefaultTableModel model) {
+        try {
+            // Tạo thư mục nếu chưa tồn tại
+            File directory = new File("D:/ExcelSwing");
+            if (!directory.exists()) {
+                directory.mkdirs();
+            }
 
+            String filePath = "D:/ExcelSwing/Dichvu.xlsx";
+            XSSFWorkbook workbook = new XSSFWorkbook();
+            XSSFSheet sheet = workbook.createSheet("Dịch vụ");
+
+            // Create header row
+            Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < model.getColumnCount(); i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(model.getColumnName(i));
+            }
+
+            // Create data rows
+            for (int i = 0; i < model.getRowCount(); i++) {
+                Row row = sheet.createRow(i + 1);
+                for (int j = 0; j < model.getColumnCount(); j++) {
+                    Cell cell = row.createCell(j);
+                    Object value = model.getValueAt(i, j);
+                    if (value != null) {
+                        cell.setCellValue(value.toString());
+                    }
+                }
+            }
+
+            // Auto size columns
+            for (int i = 0; i < model.getColumnCount(); i++) {
+                sheet.autoSizeColumn(i);
+            }
+
+            // Write to file
+            try (FileOutputStream fileOut = new FileOutputStream(filePath)) {
+                workbook.write(fileOut);
+            }
+            workbook.close();
+
+            JOptionPane.showMessageDialog(this,
+                    "Xuất file Excel thành công!\nĐường dẫn: " + filePath,
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                    "Lỗi khi xuất file Excel: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
+        }
+    }
     private void loadData() {
         model.setRowCount(0);
         try {

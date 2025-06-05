@@ -54,6 +54,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.border.TitledBorder;
+import org.jfree.chart.axis.CategoryAxis;
 import org.jfree.chart.labels.StandardPieSectionLabelGenerator;
 import org.jfree.chart.plot.PiePlot3D;
 
@@ -93,7 +94,6 @@ public class QuanLyRacThaiUI extends JFrame {
         add(sideBar, BorderLayout.WEST);
         add(mainPanel, BorderLayout.CENTER);
     }
-
 
     private void createHeaderPanel() {
         headerPanel = new JPanel(new BorderLayout());
@@ -260,7 +260,7 @@ public class QuanLyRacThaiUI extends JFrame {
         // Thêm các panel chức năng
         mainPanel.add(createTongQuanPanel(), "Tổng quan");
 //        mainPanel.add(createNvdpPanel(), "Quản lý nhân viên điều phối");
-        mainPanel.add(createChuThaiPanel(), "Chủ thải"); 
+        mainPanel.add(createChuThaiPanel(), "Chủ thải");
         mainPanel.add(createDvtgPanel(), "Đơn vị thu gom");
         mainPanel.add(createNvtgPanel(), "Nhân viên thu gom");
         mainPanel.add(createLichThuGomPanel(), "Lịch thu gom");
@@ -4804,7 +4804,7 @@ public class QuanLyRacThaiUI extends JFrame {
         });
         searchButton.addActionListener(e -> showSearchHopDongDialog(hopDongModel));
         refreshButton.addActionListener(e -> loadHopDongData(hopDongModel));
-        exportButton.addActionListener(e-> exportHopDongExcel(hopDongModel));
+        exportButton.addActionListener(e -> exportHopDongExcel(hopDongModel));
         // Add action listeners for ChiTietHopDong buttons
         chiTietAddButton.addActionListener(e -> {
             int selectedRow = hopDongTable.getSelectedRow();
@@ -4818,7 +4818,7 @@ public class QuanLyRacThaiUI extends JFrame {
             int selectedRow = chiTietTable.getSelectedRow();
             showDeleteChiTietHopDongDialog(chiTietModel, selectedRow);
         });
-        chiTietExportButton.addActionListener(e-> exportChiTietHopDongExcel(chiTietModel));
+        chiTietExportButton.addActionListener(e -> exportChiTietHopDongExcel(chiTietModel));
         chiTietEditButton.addActionListener(e -> {
             int selectedRow = chiTietTable.getSelectedRow();
             showEditChiTietHopDongDialog(chiTietModel, selectedRow);
@@ -4837,7 +4837,7 @@ public class QuanLyRacThaiUI extends JFrame {
 
         return panel;
     }
-   
+
     private void loadChiTietHopDongData(DefaultTableModel model, String maHopDong) {
         model.setRowCount(0); // Xóa dữ liệu cũ
         try {
@@ -5219,7 +5219,7 @@ public class QuanLyRacThaiUI extends JFrame {
 
                 String sql = "UPDATE ChiTietHopDong SET "
                         + "MaDichVu = ?, "
-//                        + "DiaChiThuGom = ?, "
+                        //                        + "DiaChiThuGom = ?, "
                         + "KhoiLuong = ?, "
                         + "ThanhTien = ?, "
                         + "GhiChu = ? "
@@ -6534,36 +6534,38 @@ public class QuanLyRacThaiUI extends JFrame {
             ex.printStackTrace();
         }
     }
-   private void loadThongKeChamCong(DefaultTableModel model, int month, int year) {
-    model.setRowCount(0);
-    try (Connection conn = ConnectionJDBC.getConnection()) {
-        String query = "SELECT MaNvtg, COUNT(*) as SoNgayCong " +
-                      "FROM ChamCong " +
-                      "WHERE EXTRACT(MONTH FROM NgayCong) = ? " +
-                      "AND EXTRACT(YEAR FROM NgayCong) = ? " +
-                      "GROUP BY MaNvtg";
-        
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-            pstmt.setInt(1, month);
-            pstmt.setInt(2, year);
-            
-            try (ResultSet rs = pstmt.executeQuery()) {
-                while (rs.next()) {
+
+    private void loadThongKeChamCong(DefaultTableModel model, int month, int year) {
+        model.setRowCount(0);
+        try (Connection conn = ConnectionJDBC.getConnection()) {
+            String query = "SELECT MaNvtg, COUNT(*) as SoNgayCong "
+                    + "FROM ChamCong "
+                    + "WHERE EXTRACT(MONTH FROM NgayCong) = ? "
+                    + "AND EXTRACT(YEAR FROM NgayCong) = ? "
+                    + "GROUP BY MaNvtg";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                pstmt.setInt(1, month);
+                pstmt.setInt(2, year);
+
+                try (ResultSet rs = pstmt.executeQuery()) {
+                    while (rs.next()) {
                         model.addRow(new Object[]{
-                        rs.getInt("MaNvtg"),
-                        rs.getInt("SoNgayCong")
+                            rs.getInt("MaNvtg"),
+                            rs.getInt("SoNgayCong")
                         });
+                    }
                 }
             }
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null,
+                    "Lỗi khi tải dữ liệu thống kê chấm công: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+            ex.printStackTrace();
         }
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(null,
-                "Lỗi khi tải dữ liệu thống kê chấm công: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
-        ex.printStackTrace();
     }
-}
+
     private JPanel createChamCongPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
@@ -6655,9 +6657,9 @@ public class QuanLyRacThaiUI extends JFrame {
         JSpinner monthSpinner = new JSpinner(monthModel);
         JSpinner.NumberEditor monthEditor = new JSpinner.NumberEditor(monthSpinner, "00");
         monthSpinner.setEditor(monthEditor);
-        
+
         // Tạo spinner cho năm (2000-2100)
-       // Tạo spinner cho năm (2000-2100)
+        // Tạo spinner cho năm (2000-2100)
         SpinnerNumberModel yearModel = new SpinnerNumberModel(Calendar.getInstance().get(Calendar.YEAR), 2000, 2100, 1);
         JSpinner yearSpinner = new JSpinner(yearModel);
         // Thêm dòng này để bỏ dấu phẩy
@@ -6702,7 +6704,7 @@ public class QuanLyRacThaiUI extends JFrame {
             loadThongKeChamCong(thongKeModel, month, year);
         });
         // Thêm nút tìm kiếm
-        
+
         searchThongKeButton.addActionListener(e -> {
             int month = (Integer) monthSpinner.getValue();
             int year = (Integer) yearSpinner.getValue();
@@ -6718,103 +6720,103 @@ public class QuanLyRacThaiUI extends JFrame {
         panel.add(mainContentPanel, BorderLayout.CENTER);
         return panel;
     }
- private void showSearchThongKeChamCongDialog(DefaultTableModel model, int month, int year) {
-    JDialog dialog = new JDialog(this, "Tìm kiếm thống kê chấm công", true);
-    dialog.setLayout(new BorderLayout(10, 10));
-    dialog.setSize(420, 210);
-    dialog.setLocationRelativeTo(this);
 
-    JPanel panel = new JPanel();
-    panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-    panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
+    private void showSearchThongKeChamCongDialog(DefaultTableModel model, int month, int year) {
+        JDialog dialog = new JDialog(this, "Tìm kiếm thống kê chấm công", true);
+        dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setSize(420, 210);
+        dialog.setLocationRelativeTo(this);
 
-    // ComboBox cho tiêu chí tìm kiếm (không còn label)
-    JComboBox<String> searchCriteriaComboBox = new JComboBox<>();
-    searchCriteriaComboBox.addItem("Mã nhân viên");
-    searchCriteriaComboBox.addItem("Số ngày công");
-    searchCriteriaComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 10, 20));
 
-    // TextField cho giá trị tìm kiếm (không còn label)
-    JTextField searchField = new JTextField();
-    searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        // ComboBox cho tiêu chí tìm kiếm (không còn label)
+        JComboBox<String> searchCriteriaComboBox = new JComboBox<>();
+        searchCriteriaComboBox.addItem("Mã nhân viên");
+        searchCriteriaComboBox.addItem("Số ngày công");
+        searchCriteriaComboBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
-    // Thêm thành phần vào panel
-    panel.add(searchCriteriaComboBox);
-    panel.add(Box.createVerticalStrut(10));
-    panel.add(searchField);
+        // TextField cho giá trị tìm kiếm (không còn label)
+        JTextField searchField = new JTextField();
+        searchField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
 
-    // Các nút
-    JButton searchButton = new JButton("Tìm kiếm");
-    styleButton(searchButton);
-    JButton cancelButton = new JButton("Hủy");
-    styleButton(cancelButton);
+        // Thêm thành phần vào panel
+        panel.add(searchCriteriaComboBox);
+        panel.add(Box.createVerticalStrut(10));
+        panel.add(searchField);
 
-    JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-    buttonPanel.add(cancelButton);
-    buttonPanel.add(searchButton);
+        // Các nút
+        JButton searchButton = new JButton("Tìm kiếm");
+        styleButton(searchButton);
+        JButton cancelButton = new JButton("Hủy");
+        styleButton(cancelButton);
 
-    cancelButton.addActionListener(e -> dialog.dispose());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(searchButton);
 
-    searchButton.addActionListener(e -> {
-        String searchCriteria = (String) searchCriteriaComboBox.getSelectedItem();
-        String searchValue = searchField.getText().trim();
+        cancelButton.addActionListener(e -> dialog.dispose());
 
-        // Xóa dữ liệu cũ trong bảng
-        model.setRowCount(0);
+        searchButton.addActionListener(e -> {
+            String searchCriteria = (String) searchCriteriaComboBox.getSelectedItem();
+            String searchValue = searchField.getText().trim();
 
-        try (Connection conn = ConnectionJDBC.getConnection()) {
-            String query;
-            if (searchCriteria.equals("Mã nhân viên")) {
-                query = "SELECT MaNvtg, COUNT(*) as SoNgayCong " +
-                        "FROM ChamCong " +
-                        "WHERE EXTRACT(MONTH FROM NgayCong) = ? " +
-                        "AND EXTRACT(YEAR FROM NgayCong) = ? " +
-                        "AND MaNvtg = ? " +
-                        "GROUP BY MaNvtg";
-            } else {
-                query = "SELECT MaNvtg, COUNT(*) as SoNgayCong " +
-                        "FROM ChamCong " +
-                        "WHERE EXTRACT(MONTH FROM NgayCong) = ? " +
-                        "AND EXTRACT(YEAR FROM NgayCong) = ? " +
-                        "GROUP BY MaNvtg " +
-                        "HAVING COUNT(*) = ?";
-            }
+            // Xóa dữ liệu cũ trong bảng
+            model.setRowCount(0);
 
-            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-                pstmt.setInt(1, month);
-                pstmt.setInt(2, year);
-
+            try (Connection conn = ConnectionJDBC.getConnection()) {
+                String query;
                 if (searchCriteria.equals("Mã nhân viên")) {
-                    pstmt.setString(3, searchValue);
+                    query = "SELECT MaNvtg, COUNT(*) as SoNgayCong "
+                            + "FROM ChamCong "
+                            + "WHERE EXTRACT(MONTH FROM NgayCong) = ? "
+                            + "AND EXTRACT(YEAR FROM NgayCong) = ? "
+                            + "AND MaNvtg = ? "
+                            + "GROUP BY MaNvtg";
                 } else {
-                    pstmt.setInt(3, Integer.parseInt(searchValue));
+                    query = "SELECT MaNvtg, COUNT(*) as SoNgayCong "
+                            + "FROM ChamCong "
+                            + "WHERE EXTRACT(MONTH FROM NgayCong) = ? "
+                            + "AND EXTRACT(YEAR FROM NgayCong) = ? "
+                            + "GROUP BY MaNvtg "
+                            + "HAVING COUNT(*) = ?";
                 }
 
-                try (ResultSet rs = pstmt.executeQuery()) {
-                    while (rs.next()) {
-                        model.addRow(new Object[]{
+                try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                    pstmt.setInt(1, month);
+                    pstmt.setInt(2, year);
+
+                    if (searchCriteria.equals("Mã nhân viên")) {
+                        pstmt.setString(3, searchValue);
+                    } else {
+                        pstmt.setInt(3, Integer.parseInt(searchValue));
+                    }
+
+                    try (ResultSet rs = pstmt.executeQuery()) {
+                        while (rs.next()) {
+                            model.addRow(new Object[]{
                                 rs.getInt("MaNvtg"),
                                 rs.getInt("SoNgayCong")
-                        });
+                            });
+                        }
                     }
                 }
+            } catch (SQLException | NumberFormatException ex) {
+                JOptionPane.showMessageDialog(dialog,
+                        "Lỗi khi tìm kiếm dữ liệu: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
             }
-        } catch (SQLException | NumberFormatException ex) {
-            JOptionPane.showMessageDialog(dialog,
-                    "Lỗi khi tìm kiếm dữ liệu: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-            ex.printStackTrace();
-        }
 
-        dialog.dispose();
-    });
+            dialog.dispose();
+        });
 
-    dialog.add(panel, BorderLayout.CENTER);
-    dialog.add(buttonPanel, BorderLayout.SOUTH);
-    dialog.setVisible(true);
-}
-
+        dialog.add(panel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
 
     private void showAddChamCongDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Thêm chấm công mới", true);
@@ -7042,7 +7044,7 @@ public class QuanLyRacThaiUI extends JFrame {
 
                             updateStmt.executeUpdate();
                             JOptionPane.showMessageDialog(dialog, "Cập nhật chấm công thành công!");
-        loadChamCongData(model);
+                            loadChamCongData(model);
                             dialog.dispose();
                         }
                     } catch (NumberFormatException ex) {
@@ -7167,7 +7169,7 @@ public class QuanLyRacThaiUI extends JFrame {
                     }
 
                     ResultSet rs = pstmt.executeQuery();
-        model.setRowCount(0);
+                    model.setRowCount(0);
 
                     SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
                     while (rs.next()) {
@@ -7225,33 +7227,34 @@ public class QuanLyRacThaiUI extends JFrame {
                     "Lỗi khi tải dữ liệu chấm công: " + ex.getMessage(),
                     "Lỗi",
                     JOptionPane.ERROR_MESSAGE);
+        }
     }
-}
 
     private JPanel createThongKePanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
         panel.setBorder(new EmptyBorder(20, 20, 20, 20));
         panel.setBackground(Color.WHITE);
 
-        // Header
         JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
 
         JLabel titleLabel = new JLabel("Thống kê báo cáo");
         titleLabel.setFont(titleFont);
 
-        // Control Panel
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        // Chart type selector
-        String[] chartTypes = {"Thống kê khối lượng rác", "Thống kê doanh thu", "Thống kê nhân viên", "Thống kê yêu cầu đặt lịch", "Thống kê khách hàng"};
+        String[] chartTypes = {
+            "Thống kê khối lượng rác",
+            "Thống kê doanh thu",
+            "Thống kê nhân viên",
+            "Thống kê yêu cầu đặt lịch",
+            "Thống kê khách hàng"
+        };
         JComboBox<String> chartTypePicker = new JComboBox<>(chartTypes);
 
         dateChooser = new JDateChooser();
-        // Set date format to only show month and year
-        ((JTextFieldDateEditor) dateChooser.getDateEditor()).setDateFormatString("dd/MM/yyyy");
+        ((JTextFieldDateEditor) dateChooser.getDateEditor()).setDateFormatString("yyyy");
         dateChooser.setPreferredSize(new Dimension(100, 30));
-        // Set default date to current date
         dateChooser.setDate(new Date());
 
         JButton exportButton = new JButton("Xuất báo cáo");
@@ -7259,198 +7262,51 @@ public class QuanLyRacThaiUI extends JFrame {
 
         controlPanel.add(new JLabel("Loại biểu đồ: "));
         controlPanel.add(chartTypePicker);
-        controlPanel.add(new JLabel("Chọn tháng: "));
+        controlPanel.add(new JLabel("Chọn năm: "));
         controlPanel.add(dateChooser);
         controlPanel.add(exportButton);
 
-        exportButton.addActionListener(e -> exportThongKeExcel(chartTypePicker.getSelectedItem().toString()));
-
-        // Add property change listener to update charts when date changes
-        dateChooser.addPropertyChangeListener("date", e -> {
-            if (dateChooser.getDate() != null) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(dateChooser.getDate());
-                currentMonth = cal.get(Calendar.MONTH) + 1; // Calendar months are 0-based
-                currentYear = cal.get(Calendar.YEAR);
-                updateAllCharts();
-            }
-        });
+        exportButton.addActionListener(e
+                -> exportThongKeExcel(chartTypePicker.getSelectedItem().toString())
+        );
 
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(controlPanel, BorderLayout.EAST);
 
-        // Content Panel - now only shows one chart
         JPanel contentPanel = new JPanel(new BorderLayout());
         contentPanel.setBorder(new EmptyBorder(20, 0, 0, 0));
         contentPanel.setBackground(Color.WHITE);
 
-        // Create a card layout panel to switch between charts
         JPanel chartPanel = new JPanel(new CardLayout());
         chartPanel.setBackground(Color.WHITE);
 
-        // Panel 2: Thống kê doanh thu (Bar Chart)
-        DefaultCategoryDataset revenueDataset = new DefaultCategoryDataset();
-        try {
-            Connection conn = ConnectionJDBC.getConnection();
-            String revenueQuery = "SELECT SUM(SoTien) as DoanhThu "
-                    + "FROM HoaDon "
-                    + "WHERE EXTRACT(MONTH FROM NgLap) = ? "
-                    + "AND EXTRACT(YEAR FROM NgLap) = ? "
-                    + "AND TinhTrang = 'Đã thanh toán'";
-            try (PreparedStatement pstmt = conn.prepareStatement(revenueQuery)) {
-                pstmt.setInt(1, currentMonth);
-                pstmt.setInt(2, currentYear);
-                ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    revenueDataset.addValue(rs.getDouble("DoanhThu"), "Doanh thu", "Tháng " + currentMonth + "/" + currentYear);
-                }
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "Lỗi khi lấy dữ liệu doanh thu: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-        }
+        // Lấy năm hiện tại ban đầu
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(dateChooser.getDate());
+        currentYear = cal.get(Calendar.YEAR);
+        currentMonth = 1; // tháng mặc định (vì chỉ lấy năm)
 
-        JFreeChart revenueChart = ChartFactory.createBarChart(
-                "Thống kê doanh thu",
-                "Tháng",
-                "VND",
-                revenueDataset,
-                PlotOrientation.VERTICAL,
-                true,
-                true,
-                false
-        );
-
-        CategoryPlot revenuePlot = revenueChart.getCategoryPlot();
-        revenuePlot.setBackgroundPaint(Color.WHITE);
-        revenuePlot.setOutlinePaint(null);
-        BarRenderer revenueRenderer = (BarRenderer) revenuePlot.getRenderer();
-        revenueRenderer.setSeriesPaint(0, new Color(52, 152, 219));
-
-        ChartPanel revenueChartPanel = new ChartPanel(revenueChart);
-        revenueChartPanel.setBackground(Color.WHITE);
-
-        JPanel revenuePanel = new JPanel(new BorderLayout());
-        revenuePanel.setBackground(Color.WHITE);
-        revenuePanel.add(revenueChartPanel);
-
-        // Panel 3: Thống kê nhân viên (Bar Chart)
-        DefaultCategoryDataset staffDataset = new DefaultCategoryDataset();
-        try {
-            Connection conn = ConnectionJDBC.getConnection();
-            String staffQuery = "SELECT 'Nhân viên điều phối' as LoaiNhanVien, COUNT(*) as SoLuong FROM NhanVienDieuPhoi "
-                    + "UNION ALL "
-                    + "SELECT 'Nhân viên thu gom' as LoaiNhanVien, COUNT(*) as SoLuong FROM NhanVienThuGom";
-            try (PreparedStatement pstmt = conn.prepareStatement(staffQuery)) {
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    staffDataset.addValue(rs.getInt("SoLuong"), "Số lượng", rs.getString("LoaiNhanVien"));
-                }
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "Lỗi khi lấy dữ liệu nhân viên: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-
-        JFreeChart staffChart = ChartFactory.createBarChart(
-                "Thống kê nhân viên",
-                "Vị trí",
-                "Số lượng",
-                staffDataset,
-                PlotOrientation.VERTICAL,
-                true,
-                true,
-                false
-        );
-
-        CategoryPlot staffPlot = staffChart.getCategoryPlot();
-        staffPlot.setBackgroundPaint(Color.WHITE);
-        staffPlot.setOutlinePaint(null);
-        BarRenderer staffRenderer = (BarRenderer) staffPlot.getRenderer();
-        staffRenderer.setSeriesPaint(0, new Color(46, 204, 113));
-
-        ChartPanel staffChartPanel = new ChartPanel(staffChart);
-        staffChartPanel.setBackground(Color.WHITE);
-
-        JPanel staffPanel = new JPanel(new BorderLayout());
-        staffPanel.setBackground(Color.WHITE);
-        staffPanel.add(staffChartPanel);
-
-        // Panel 4: Đánh giá dịch vụ (Pie Chart)
-        DefaultPieDataset ratingDataset = new DefaultPieDataset();
-        try {
-            Connection conn = ConnectionJDBC.getConnection();
-            String requestQuery = "SELECT TrangThai, COUNT(*) as SoLuong "
-                    + "FROM YeuCauDatLich "
-                    + "WHERE EXTRACT(MONTH FROM ThoiGianYc) = ? "
-                    + "AND EXTRACT(YEAR FROM ThoiGianYc) = ? "
-                    + "GROUP BY TrangThai";
-            try (PreparedStatement pstmt = conn.prepareStatement(requestQuery)) {
-                pstmt.setInt(1, currentMonth);
-                pstmt.setInt(2, currentYear);
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    ratingDataset.setValue(rs.getString("TrangThai"), rs.getInt("SoLuong"));
-                }
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "Lỗi khi lấy dữ liệu đánh giá: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-
-        JFreeChart ratingChart = ChartFactory.createPieChart(
-                "Đánh giá dịch vụ",
-                ratingDataset,
-                true,
-                true,
-                false
-        );
-
-        PiePlot ratingPlot = (PiePlot) ratingChart.getPlot();
-        ratingPlot.setBackgroundPaint(Color.WHITE);
-        ratingPlot.setOutlinePaint(null);
-        ratingPlot.setSectionPaint("Đã duyệt", new Color(46, 204, 113));
-        ratingPlot.setSectionPaint("Đang xử lý", new Color(255, 215, 0));
-        ratingPlot.setSectionPaint("Từ chối", new Color(231, 76, 60));
-
-        ChartPanel ratingChartPanel = new ChartPanel(ratingChart);
-        ratingChartPanel.setBackground(Color.WHITE);
-
-        JPanel ratingPanel = new JPanel(new BorderLayout());
-        ratingPanel.setBackground(Color.WHITE);
-        ratingPanel.add(ratingChartPanel);
-
-        // Add charts to card layout
+        // Thêm biểu đồ ban đầu
         chartPanel.add(createWasteChart(currentMonth, currentYear, dateChooser), "Thống kê khối lượng rác");
         chartPanel.add(createRevenueChart(currentMonth, currentYear), "Thống kê doanh thu");
         chartPanel.add(createStaffChart(), "Thống kê nhân viên");
         chartPanel.add(createRequestChart(currentMonth, currentYear), "Thống kê yêu cầu đặt lịch");
         chartPanel.add(createCustomerChart(currentMonth, currentYear), "Thống kê khách hàng");
 
-        // Add listener to switch charts
+        // Bắt sự kiện đổi loại biểu đồ
         chartTypePicker.addActionListener(e -> {
             CardLayout cl = (CardLayout) chartPanel.getLayout();
             cl.show(chartPanel, (String) chartTypePicker.getSelectedItem());
         });
 
-        // Add listener to update charts when date changes
+        // Cập nhật biểu đồ khi đổi năm
         dateChooser.addPropertyChangeListener("date", e -> {
             if (dateChooser.getDate() != null) {
-                Calendar cal = Calendar.getInstance();
-                cal.setTime(dateChooser.getDate());
-                currentMonth = cal.get(Calendar.MONTH) + 1;
-                currentYear = cal.get(Calendar.YEAR);
+                Calendar newCal = Calendar.getInstance();
+                newCal.setTime(dateChooser.getDate());
+                currentYear = newCal.get(Calendar.YEAR);
+                currentMonth = 1; // gán lại tháng mặc định (không lấy Calendar.MONTH)
 
-                // Update all charts with new date
                 chartPanel.removeAll();
                 chartPanel.add(createWasteChart(currentMonth, currentYear, dateChooser), "Thống kê khối lượng rác");
                 chartPanel.add(createRevenueChart(currentMonth, currentYear), "Thống kê doanh thu");
@@ -7458,7 +7314,6 @@ public class QuanLyRacThaiUI extends JFrame {
                 chartPanel.add(createRequestChart(currentMonth, currentYear), "Thống kê yêu cầu đặt lịch");
                 chartPanel.add(createCustomerChart(currentMonth, currentYear), "Thống kê khách hàng");
 
-                // Show current selected chart
                 CardLayout cl = (CardLayout) chartPanel.getLayout();
                 cl.show(chartPanel, (String) chartTypePicker.getSelectedItem());
             }
@@ -7612,7 +7467,6 @@ public class QuanLyRacThaiUI extends JFrame {
         }
     }
 
-    // ... existing code ...
     private void showSearchTuyenThuGomDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Tìm kiếm tuyến thu gom", true);
         dialog.setLayout(new BorderLayout(10, 10));
@@ -8157,42 +8011,6 @@ public class QuanLyRacThaiUI extends JFrame {
         }
     }
 
-//    private void showSearchYeuCauDatLichDialog(DefaultTableModel model) {
-//        String maYC = JOptionPane.showInputDialog(this, "Nhập mã yêu cầu đặt lịch cần tìm:");
-//        if (maYC == null || maYC.trim().isEmpty()) {
-//            loadYeuCauDatLichData(model);
-//            return;
-//        }
-//
-//        try {
-//            Connection conn = ConnectionJDBC.getConnection();
-//            String sql = "SELECT * FROM YeuCauDatLich WHERE MaYC = ?";
-//            
-//            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-//                pstmt.setInt(1, Integer.parseInt(maYC.trim()));
-//                ResultSet rs = pstmt.executeQuery();
-//                
-//                if (rs.next()) {
-//                    model.setRowCount(0);
-//                    model.addRow(new Object[]{
-//                        rs.getInt("MaYC"),
-//                        rs.getInt("MaChuThai"),
-//                        rs.getString("NgayThuGom"),
-//                        rs.getString("GioThuGom"),
-//                        rs.getString("LoaiRac"),
-//                        rs.getString("TrangThai")
-//                    });
-//                } else {
-//                    JOptionPane.showMessageDialog(this, "Không có mã yêu cầu đặt lịch " + maYC);
-//                    loadYeuCauDatLichData(model);
-//                }
-//            }
-//        } catch (NumberFormatException ex) {
-//            JOptionPane.showMessageDialog(this, "Mã yêu cầu đặt lịch không hợp lệ!");
-//        } catch (SQLException ex) {
-//            JOptionPane.showMessageDialog(this, "Lỗi khi tìm yêu cầu đặt lịch: " + ex.getMessage());
-//        }
-//    }
     private void showSearchYeuCauDatLichDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Tìm kiếm yêu cầu đặt lịch", true);
         dialog.setLayout(new BorderLayout(10, 10));
@@ -8246,7 +8064,7 @@ public class QuanLyRacThaiUI extends JFrame {
             }
             if ("Trạng thái".equals(selected)) {
                 cl.show(inputPanel, "combo");
-                        } else {
+            } else {
                 cl.show(inputPanel, "text");
             }
         });
@@ -8436,12 +8254,12 @@ public class QuanLyRacThaiUI extends JFrame {
 
     private void showAddQuanDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Thêm quận mới", true);
-                dialog.setLayout(new BorderLayout(10, 10));
+        dialog.setLayout(new BorderLayout(10, 10));
         dialog.setSize(400, 200);
-                dialog.setLocationRelativeTo(this);
+        dialog.setLocationRelativeTo(this);
 
         JPanel formPanel = new JPanel(new GridLayout(2, 2, 10, 10));
-                formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
         JTextField maQuanField = new JTextField();
         JTextField tenQuanField = new JTextField();
@@ -8564,23 +8382,23 @@ public class QuanLyRacThaiUI extends JFrame {
         JTextField tenQuanField = new JTextField(tenQuan, 10);
         formPanel.add(tenQuanField);
 
-                JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-                JButton saveButton = new JButton("Lưu");
-                JButton cancelButton = new JButton("Hủy");
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton saveButton = new JButton("Lưu");
+        JButton cancelButton = new JButton("Hủy");
 
-                styleButton(saveButton);
-                styleButton(cancelButton);
+        styleButton(saveButton);
+        styleButton(cancelButton);
 
-                buttonPanel.add(cancelButton);
-                buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(saveButton);
 
-                saveButton.addActionListener(e -> {
-                    try {
+        saveButton.addActionListener(e -> {
+            try {
                 // Validate input
                 if (tenQuanField.getText().trim().isEmpty()) {
-                            JOptionPane.showMessageDialog(dialog, "Vui lòng điền đầy đủ thông tin!");
-                            return;
-                        }
+                    JOptionPane.showMessageDialog(dialog, "Vui lòng điền đầy đủ thông tin!");
+                    return;
+                }
 
                 // Update database
                 String updateSql = "UPDATE Quan SET TenQuan = ? WHERE MaQuan = ?";
@@ -8590,22 +8408,22 @@ public class QuanLyRacThaiUI extends JFrame {
                     updateStmt.setString(1, tenQuanField.getText().trim());
                     updateStmt.setString(2, maQuanStr);
 
-                            updateStmt.executeUpdate();
+                    updateStmt.executeUpdate();
                     JOptionPane.showMessageDialog(dialog, "Cập nhật quận thành công!");
                     loadQuanData(model);
-                            dialog.dispose();
-                        }
-                    } catch (SQLException ex) {
+                    dialog.dispose();
+                }
+            } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(dialog, "Lỗi khi cập nhật quận: " + ex.getMessage());
-                    }
-                });
-
-                cancelButton.addActionListener(e -> dialog.dispose());
-
-                dialog.add(formPanel, BorderLayout.CENTER);
-                dialog.add(buttonPanel, BorderLayout.SOUTH);
-                dialog.setVisible(true);
             }
+        });
+
+        cancelButton.addActionListener(e -> dialog.dispose());
+
+        dialog.add(formPanel, BorderLayout.CENTER);
+        dialog.add(buttonPanel, BorderLayout.SOUTH);
+        dialog.setVisible(true);
+    }
 
     private void showSearchQuanDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Tìm kiếm quận", true);
@@ -8686,7 +8504,7 @@ public class QuanLyRacThaiUI extends JFrame {
                 }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(dialog, "Giá trị tìm kiếm không hợp lệ!");
-        } catch (SQLException ex) {
+            } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(dialog, "Lỗi khi tìm kiếm: " + ex.getMessage());
             }
         });
@@ -9027,67 +8845,72 @@ public class QuanLyRacThaiUI extends JFrame {
     }
 
     private ChartPanel createCustomerChart(int month, int year) {
-        DefaultPieDataset dataset = new DefaultPieDataset();
-        try {
-            Connection conn = ConnectionJDBC.getConnection();
-            String query = "SELECT q.TenQuan, COUNT(DISTINCT hd.MaChuThai) as SoLuongKhachHang "
-                    + "FROM Quan q "
-                    + "JOIN TuyenDuongThuGom t ON t.KhuVuc = q.MaQuan "
-                    + "JOIN LichThuGom l ON l.MaTuyen = t.MaTuyen "
-                    + "JOIN YeuCauDatLich y ON y.MaLich = l.MaLich "
-                    + "JOIN ChuThai ct ON ct.MaChuThai = y.MaChuThai "
-                    + "JOIN HopDong hd ON hd.MaChuThai = ct.MaChuThai "
-                    + "WHERE hd.TrangThai = 'Hoạt động' "
-                    + "AND hd.NgKetThuc >= TO_DATE(?, 'DD/MM/YYYY') "
-                    + "GROUP BY q.MaQuan, q.TenQuan "
-                    + "ORDER BY q.TenQuan";
-            
-            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-                // Tạo chuỗi ngày từ tháng và năm được chọn
-                String selectedDate = String.format("01/%02d/%04d", month, year);
-                pstmt.setString(1, selectedDate);
+    DefaultPieDataset dataset = new DefaultPieDataset();
 
-                ResultSet rs = pstmt.executeQuery();
-                while (rs.next()) {
-                    dataset.setValue(rs.getString("TenQuan"), rs.getInt("SoLuongKhachHang"));
-                }
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(null,
-                    "Lỗi khi lấy dữ liệu khách hàng: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
-        }
-
-        JFreeChart chart = ChartFactory.createPieChart3D(
-                "Thống kê khách hàng theo quận",
-                dataset,
-                true,
-                true,
-                false
-        );
-
-        // Customize the chart
-        PiePlot3D plot = (PiePlot3D) chart.getPlot();
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setOutlinePaint(null);
-        plot.setStartAngle(290);
-        plot.setDepthFactor(0.2);
-
-        // Set a rainbow color scheme for different districts
-        int index = 0;
-        for (Object key : dataset.getKeys()) {
-            float hue = index / (float) dataset.getItemCount();
-            Color color = Color.getHSBColor(hue, 0.7f, 0.95f);
-            plot.setSectionPaint((Comparable<?>) key, color);
-            index++;
-        }
-
-        ChartPanel chartPanel = new ChartPanel(chart);
-        chartPanel.setBackground(Color.WHITE);
-        return chartPanel;
+    // ✅ Nếu tháng không hợp lệ, gán mặc định là 1
+    if (month < 1 || month > 12) {
+        System.out.println("Tháng không hợp lệ (" + month + "). Gán mặc định là tháng 1.");
+        month = 1;
     }
+
+    try {
+        Connection conn = ConnectionJDBC.getConnection();
+        String query = "SELECT q.TenQuan, COUNT(DISTINCT hd.MaChuThai) as SoLuongKhachHang "
+                + "FROM Quan q "
+                + "JOIN TuyenDuongThuGom t ON t.KhuVuc = q.MaQuan "
+                + "JOIN LichThuGom l ON l.MaTuyen = t.MaTuyen "
+                + "JOIN YeuCauDatLich y ON y.MaLich = l.MaLich "
+                + "JOIN ChuThai ct ON ct.MaChuThai = y.MaChuThai "
+                + "JOIN HopDong hd ON hd.MaChuThai = ct.MaChuThai "
+                + "WHERE hd.TrangThai = 'Hoạt động' "
+                + "AND hd.NgKetThuc >= ? "
+                + "GROUP BY q.MaQuan, q.TenQuan "
+                + "ORDER BY q.TenQuan";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+            LocalDate localDate = LocalDate.of(year, month, 1);
+            java.sql.Date sqlDate = java.sql.Date.valueOf(localDate);
+            pstmt.setDate(1, sqlDate);
+
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                dataset.setValue(rs.getString("TenQuan"), rs.getInt("SoLuongKhachHang"));
+            }
+        }
+    } catch (SQLException ex) {
+        ex.printStackTrace();
+        JOptionPane.showMessageDialog(null,
+                "Lỗi khi lấy dữ liệu khách hàng: " + ex.getMessage(),
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+    }
+
+    JFreeChart chart = ChartFactory.createPieChart3D(
+            "Thống kê khách hàng theo quận",
+            dataset,
+            true,
+            true,
+            false
+    );
+
+    PiePlot3D plot = (PiePlot3D) chart.getPlot();
+    plot.setBackgroundPaint(Color.WHITE);
+    plot.setOutlinePaint(null);
+    plot.setStartAngle(290);
+    plot.setDepthFactor(0.2);
+
+    int index = 0;
+    for (Object key : dataset.getKeys()) {
+        float hue = index / (float) dataset.getItemCount();
+        Color color = Color.getHSBColor(hue, 0.7f, 0.95f);
+        plot.setSectionPaint((Comparable<?>) key, color);
+        index++;
+    }
+
+    ChartPanel chartPanel = new ChartPanel(chart);
+    chartPanel.setBackground(Color.WHITE);
+    return chartPanel;
+}
 
     private ChartPanel createWasteChart(int month, int year, JDateChooser dateChooser) {
         DefaultPieDataset wasteDataset = new DefaultPieDataset();
@@ -9169,17 +8992,26 @@ public class QuanLyRacThaiUI extends JFrame {
         DefaultCategoryDataset revenueDataset = new DefaultCategoryDataset();
         try {
             Connection conn = ConnectionJDBC.getConnection();
-            String revenueQuery = "SELECT SUM(SoTien) as DoanhThu "
+            String revenueQuery = "SELECT EXTRACT(MONTH FROM NgLap) as Thang, SUM(SoTien) as DoanhThu "
                     + "FROM HoaDon "
-                    + "WHERE EXTRACT(MONTH FROM NgLap) = ? "
-                    + "AND EXTRACT(YEAR FROM NgLap) = ? "
-                    + "AND TinhTrang = 'Đã thanh toán'";
+                    + "WHERE EXTRACT(YEAR FROM NgLap) = ? "
+                    + "AND TinhTrang = 'Đã thanh toán' "
+                    + "GROUP BY EXTRACT(MONTH FROM NgLap) "
+                    + "ORDER BY EXTRACT(MONTH FROM NgLap)";
             try (PreparedStatement pstmt = conn.prepareStatement(revenueQuery)) {
-                pstmt.setInt(1, month);
-                pstmt.setInt(2, year);
+                pstmt.setInt(1, currentYear);
                 ResultSet rs = pstmt.executeQuery();
-                if (rs.next()) {
-                    revenueDataset.addValue(rs.getDouble("DoanhThu"), "Doanh thu", "Tháng " + month + "/" + year);
+
+                // Initialize all months with 0 value first
+                for (currentMonth = 1; currentMonth <= 12; currentMonth++) {
+                    revenueDataset.addValue(0.0, "Doanh thu", "Tháng " + currentMonth);
+                }
+
+                // Add actual revenue data
+                while (rs.next()) {
+                    currentMonth = rs.getInt("Thang");
+                    double revenue = rs.getDouble("DoanhThu");
+                    revenueDataset.addValue(revenue, "Doanh thu", "Tháng " + currentMonth);
                 }
             }
         } catch (SQLException ex) {
@@ -9191,7 +9023,7 @@ public class QuanLyRacThaiUI extends JFrame {
         }
 
         JFreeChart revenueChart = ChartFactory.createBarChart(
-                "Thống kê doanh thu",
+                "Thống kê doanh thu năm " + currentYear,
                 "Tháng",
                 "VND",
                 revenueDataset,
@@ -9207,9 +9039,17 @@ public class QuanLyRacThaiUI extends JFrame {
         BarRenderer revenueRenderer = (BarRenderer) revenuePlot.getRenderer();
         revenueRenderer.setSeriesPaint(0, new Color(52, 152, 219));
 
-        ChartPanel chartPanel = new ChartPanel(revenueChart);
-        chartPanel.setBackground(Color.WHITE);
-        return chartPanel;
+        // Customize the domain axis to show all months
+        CategoryAxis domainAxis = revenuePlot.getDomainAxis();
+        domainAxis.setCategoryMargin(0.1);
+
+        // Customize the range axis to show currency format
+        NumberAxis rangeAxis = (NumberAxis) revenuePlot.getRangeAxis();
+        rangeAxis.setNumberFormatOverride(new DecimalFormat("#,###"));
+
+        ChartPanel revenueChartPanel = new ChartPanel(revenueChart);
+        revenueChartPanel.setBackground(Color.WHITE);
+        return revenueChartPanel;
     }
 
     private ChartPanel createStaffChart() {
@@ -9221,7 +9061,7 @@ public class QuanLyRacThaiUI extends JFrame {
                     + "SELECT 'Nhân viên thu gom' as LoaiNhanVien, COUNT(*) as SoLuong FROM NhanVienThuGom";
             try (PreparedStatement pstmt = conn.prepareStatement(staffQuery)) {
                 ResultSet rs = pstmt.executeQuery();
-                    while (rs.next()) {
+                while (rs.next()) {
                     staffDataset.addValue(rs.getInt("SoLuong"), "Số lượng", rs.getString("LoaiNhanVien"));
                 }
             }
@@ -9428,7 +9268,7 @@ public class QuanLyRacThaiUI extends JFrame {
                                 + "JOIN ChuThai ct ON ct.MaChuThai = y.MaChuThai "
                                 + "JOIN HopDong hd ON hd.MaChuThai = ct.MaChuThai "
                                 + "WHERE hd.TrangThai = 'Hoạt động' "
-                                + "AND hd.NgKetThuc >= TO_DATE(?, 'DD/MM/YYYY') "
+                                + "AND hd.NgKetThuc >= TO_DATE('01/' || ? || '/' || ?, 'DD/MM/YYYY') "
                                 + "GROUP BY q.MaQuan, q.TenQuan "
                                 + "ORDER BY q.TenQuan";
 
@@ -9437,8 +9277,8 @@ public class QuanLyRacThaiUI extends JFrame {
                         customerHeaderRow.createCell(1).setCellValue("Số lượng khách hàng");
 
                         try (PreparedStatement pstmt = conn.prepareStatement(customerQuery)) {
-                            String selectedDate = String.format("01/%02d/%04d", currentMonth, currentYear);
-                            pstmt.setString(1, selectedDate);
+                            pstmt.setString(1, String.format("%02d", currentMonth));
+                            pstmt.setString(2, String.format("%04d", currentYear));
                             ResultSet rs = pstmt.executeQuery();
 
                             while (rs.next()) {

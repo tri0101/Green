@@ -5552,140 +5552,150 @@ public class QuanLyRacThaiUI extends JFrame {
         }
     }
 
-    private void showEditHopDongDialog(DefaultTableModel model, int selectedRow) {
-        if (selectedRow == -1) {
-            JOptionPane.showMessageDialog(this, "Vui lòng chọn hợp đồng cần sửa!");
-            return;
-        }
-
-        String maHD = model.getValueAt(selectedRow, 0).toString();
-        try {
-            Connection conn = ConnectionJDBC.getConnection();
-            String sql = "SELECT * FROM HopDong WHERE MaHopDong = ?";
-
-            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-                pstmt.setInt(1, Integer.parseInt(maHD.trim()));
-                ResultSet rs = pstmt.executeQuery();
-
-                if (!rs.next()) {
-                    JOptionPane.showMessageDialog(this, "Không tìm thấy hợp đồng với mã " + maHD);
-                    return;
-                }
-
-                // Tạo dialog sửa hợp đồng
-                JDialog dialog = new JDialog(this, "Sửa hợp đồng", true);
-                dialog.setLayout(new BorderLayout(10, 10));
-                dialog.setSize(400, 500);
-                dialog.setLocationRelativeTo(this);
-
-                JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
-                formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-                formPanel.add(new JLabel("Mã chủ thải:"));
-                JTextField maChuThaiField = new JTextField(String.valueOf(rs.getInt("MaChuThai")));
-                formPanel.add(maChuThaiField);
-
-                formPanel.add(new JLabel("Loại hợp đồng:"));
-                JTextField loaiHopDongField = new JTextField(rs.getString("LoaiHopDong"));
-                formPanel.add(loaiHopDongField);
-
-                // Spinner ngày bắt đầu
-                formPanel.add(new JLabel("Ngày bắt đầu:"));
-                SpinnerDateModel startDateModel = new SpinnerDateModel();
-                JSpinner ngayBatDauSpinner = new JSpinner(startDateModel);
-                JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(ngayBatDauSpinner, "dd/MM/yyyy");
-                ngayBatDauSpinner.setEditor(startDateEditor);
-                ngayBatDauSpinner.setValue(rs.getDate("NgBatDau"));
-                formPanel.add(ngayBatDauSpinner);
-
-                // Spinner ngày kết thúc
-                formPanel.add(new JLabel("Ngày kết thúc:"));
-                SpinnerDateModel endDateModel = new SpinnerDateModel();
-                JSpinner ngayKetThucSpinner = new JSpinner(endDateModel);
-                JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(ngayKetThucSpinner, "dd/MM/yyyy");
-                ngayKetThucSpinner.setEditor(endDateEditor);
-                ngayKetThucSpinner.setValue(rs.getDate("NgKetThuc"));
-                formPanel.add(ngayKetThucSpinner);
-
-                formPanel.add(new JLabel("Địa chỉ thu gom:"));
-                JTextField diaChiField = new JTextField(rs.getString("DiaChiThuGom"));
-                formPanel.add(diaChiField);
-
-                formPanel.add(new JLabel("Mô tả:"));
-                JTextField moTaField = new JTextField(rs.getString("MoTa"));
-                formPanel.add(moTaField);
-
-                formPanel.add(new JLabel("Trạng thái:"));
-                String[] trangThaiOptions = {"Hoạt động", "Chờ duyệt", "Tạm dừng"};
-                JComboBox<String> trangThaiCombo = new JComboBox<>(trangThaiOptions);
-                String trangThaiHienTai = rs.getString("TrangThai");
-                if (trangThaiHienTai != null) {
-                    trangThaiCombo.setSelectedItem(trangThaiHienTai);
-                }
-                formPanel.add(trangThaiCombo);
-
-                JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-                JButton saveButton = new JButton("Lưu");
-                JButton cancelButton = new JButton("Hủy");
-
-                styleButton(saveButton);
-                styleButton(cancelButton);
-
-                buttonPanel.add(cancelButton);
-                buttonPanel.add(saveButton);
-
-                saveButton.addActionListener(e -> {
-                    try {
-                        // Validate input
-                        if (maChuThaiField.getText().trim().isEmpty()
-                                || loaiHopDongField.getText().trim().isEmpty()
-                                || trangThaiCombo.getSelectedItem() == null) {
-                            JOptionPane.showMessageDialog(dialog, "Vui lòng điền đầy đủ thông tin!");
-                            return;
-                        }
-
-                        // Lấy ngày từ spinner
-                        Date ngayBatDau = (Date) ngayBatDauSpinner.getValue();
-                        Date ngayKetThuc = (Date) ngayKetThucSpinner.getValue();
-
-                        // Cập nhật database
-                        String updateSql = "UPDATE HopDong SET MaChuThai = ?, LoaiHopDong = ?, NgBatDau = ?, NgKetThuc = ?, DiaChiThuGom = ? ,MoTa = ?, TrangThai = ? WHERE MaHopDong = ?";
-
-                        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-                            updateStmt.setInt(1, Integer.parseInt(maChuThaiField.getText().trim()));
-                            updateStmt.setString(2, loaiHopDongField.getText().trim());
-                            updateStmt.setDate(3, new java.sql.Date(ngayBatDau.getTime()));
-                            updateStmt.setDate(4, new java.sql.Date(ngayKetThuc.getTime()));
-                            updateStmt.setString(5, diaChiField.getText().trim());
-                            updateStmt.setString(6, moTaField.getText().trim());
-                            updateStmt.setString(7, (String) trangThaiCombo.getSelectedItem());
-
-                            updateStmt.setInt(8, Integer.parseInt(maHD.trim()));
-
-                            updateStmt.executeUpdate();
-                            JOptionPane.showMessageDialog(dialog, "Cập nhật hợp đồng thành công!");
-                            loadHopDongData(model);
-                            dialog.dispose();
-                        }
-                    } catch (NumberFormatException ex) {
-                        JOptionPane.showMessageDialog(dialog, "Giá trị không hợp lệ!");
-                    } catch (SQLException ex) {
-                        JOptionPane.showMessageDialog(dialog, "Lỗi khi cập nhật hợp đồng: " + ex.getMessage());
-                    }
-                });
-
-                cancelButton.addActionListener(e -> dialog.dispose());
-
-                dialog.add(formPanel, BorderLayout.CENTER);
-                dialog.add(buttonPanel, BorderLayout.SOUTH);
-                dialog.setVisible(true);
-            }
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Mã hợp đồng không hợp lệ!");
-        } catch (SQLException ex) {
-            JOptionPane.showMessageDialog(this, "Lỗi khi tìm hợp đồng: " + ex.getMessage());
-        }
+   private void showEditHopDongDialog(DefaultTableModel model, int selectedRow) {
+    if (selectedRow == -1) {
+        JOptionPane.showMessageDialog(this, "Vui lòng chọn hợp đồng cần sửa!");
+        return;
     }
+
+    String maHD = model.getValueAt(selectedRow, 0).toString();
+    try {
+        Connection conn = ConnectionJDBC.getConnection();
+        String sql = "SELECT * FROM HopDong WHERE MaHopDong = ?";
+
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setInt(1, Integer.parseInt(maHD.trim()));
+            ResultSet rs = pstmt.executeQuery();
+
+            if (!rs.next()) {
+                JOptionPane.showMessageDialog(this, "Không tìm thấy hợp đồng với mã " + maHD);
+                return;
+            }
+
+            // Tạo dialog sửa hợp đồng
+            JDialog dialog = new JDialog(this, "Sửa hợp đồng", true);
+            dialog.setLayout(new BorderLayout(10, 10));
+            dialog.setSize(400, 500);
+            dialog.setLocationRelativeTo(this);
+
+            JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
+            formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+            formPanel.add(new JLabel("Mã chủ thải:"));
+            JTextField maChuThaiField = new JTextField(String.valueOf(rs.getInt("MaChuThai")));
+            formPanel.add(maChuThaiField);
+
+            formPanel.add(new JLabel("Loại hợp đồng:"));
+            JTextField loaiHopDongField = new JTextField(rs.getString("LoaiHopDong"));
+            formPanel.add(loaiHopDongField);
+
+            // Spinner ngày bắt đầu
+            formPanel.add(new JLabel("Ngày bắt đầu:"));
+            SpinnerDateModel startDateModel = new SpinnerDateModel();
+            JSpinner ngayBatDauSpinner = new JSpinner(startDateModel);
+            JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(ngayBatDauSpinner, "dd/MM/yyyy");
+            ngayBatDauSpinner.setEditor(startDateEditor);
+            ngayBatDauSpinner.setValue(rs.getDate("NgBatDau"));
+            formPanel.add(ngayBatDauSpinner);
+
+            // Spinner ngày kết thúc
+            formPanel.add(new JLabel("Ngày kết thúc:"));
+            SpinnerDateModel endDateModel = new SpinnerDateModel();
+            JSpinner ngayKetThucSpinner = new JSpinner(endDateModel);
+            JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(ngayKetThucSpinner, "dd/MM/yyyy");
+            ngayKetThucSpinner.setEditor(endDateEditor);
+            ngayKetThucSpinner.setValue(rs.getDate("NgKetThuc"));
+            formPanel.add(ngayKetThucSpinner);
+
+            formPanel.add(new JLabel("Địa chỉ thu gom:"));
+            JTextField diaChiField = new JTextField(rs.getString("DiaChiThuGom"));
+            formPanel.add(diaChiField);
+
+            formPanel.add(new JLabel("Mô tả:"));
+            JTextField moTaField = new JTextField(rs.getString("MoTa"));
+            formPanel.add(moTaField);
+
+            formPanel.add(new JLabel("Trạng thái:"));
+            String[] trangThaiOptions = {"Hoạt động", "Chờ duyệt", "Tạm dừng"};
+            JComboBox<String> trangThaiCombo = new JComboBox<>(trangThaiOptions);
+            String trangThaiHienTai = rs.getString("TrangThai");
+            if (trangThaiHienTai != null) {
+                trangThaiCombo.setSelectedItem(trangThaiHienTai);
+            }
+            formPanel.add(trangThaiCombo);
+
+            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            JButton saveButton = new JButton("Lưu");
+            JButton cancelButton = new JButton("Hủy");
+
+            styleButton(saveButton);
+            styleButton(cancelButton);
+
+            buttonPanel.add(cancelButton);
+            buttonPanel.add(saveButton);
+
+            saveButton.addActionListener(e -> {
+                try {
+                    if (maChuThaiField.getText().trim().isEmpty()
+                            || loaiHopDongField.getText().trim().isEmpty()
+                            || trangThaiCombo.getSelectedItem() == null) {
+                        JOptionPane.showMessageDialog(dialog, "Vui lòng điền đầy đủ thông tin!");
+                        return;
+                    }
+
+                    Date ngayBatDau = (Date) ngayBatDauSpinner.getValue();
+                    Date ngayKetThuc = (Date) ngayKetThucSpinner.getValue();
+
+                    conn.setAutoCommit(false); // Bắt đầu transaction
+                    // conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); // (Tùy chọn)
+
+                    String updateSql = "UPDATE HopDong SET MaChuThai = ?, LoaiHopDong = ?, NgBatDau = ?, NgKetThuc = ?, DiaChiThuGom = ? ,MoTa = ?, TrangThai = ? WHERE MaHopDong = ?";
+                    try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                        updateStmt.setInt(1, Integer.parseInt(maChuThaiField.getText().trim()));
+                        updateStmt.setString(2, loaiHopDongField.getText().trim());
+                        updateStmt.setDate(3, new java.sql.Date(ngayBatDau.getTime()));
+                        updateStmt.setDate(4, new java.sql.Date(ngayKetThuc.getTime()));
+                        updateStmt.setString(5, diaChiField.getText().trim());
+                        updateStmt.setString(6, moTaField.getText().trim());
+                        updateStmt.setString(7, (String) trangThaiCombo.getSelectedItem());
+                        updateStmt.setInt(8, Integer.parseInt(maHD.trim()));
+
+                        updateStmt.executeUpdate();
+                        dialog.dispose();
+                        // Giữ khóa 10 giây trước khi commit
+                        Thread.sleep(10000);
+
+                        conn.commit(); // Commit thay đổi sau khi giữ khóa
+                        JOptionPane.showMessageDialog(dialog, "Cập nhật hợp đồng thành công!");
+                        loadHopDongData(model);
+//                        dialog.dispose();
+                    }
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(dialog, "Giá trị không hợp lệ!");
+                } catch (SQLException ex) {
+                    try {
+                        conn.rollback(); // Rollback nếu có lỗi
+                    } catch (SQLException rollbackEx) {
+                        rollbackEx.printStackTrace();
+                    }
+                    JOptionPane.showMessageDialog(dialog, "Lỗi khi cập nhật hợp đồng: " + ex.getMessage());
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt(); // Phục hồi trạng thái bị gián đoạn
+                }
+            });
+
+            cancelButton.addActionListener(e -> dialog.dispose());
+
+            dialog.add(formPanel, BorderLayout.CENTER);
+            dialog.add(buttonPanel, BorderLayout.SOUTH);
+            dialog.setVisible(true);
+        }
+    } catch (NumberFormatException ex) {
+        JOptionPane.showMessageDialog(this, "Mã hợp đồng không hợp lệ!");
+    } catch (SQLException ex) {
+        JOptionPane.showMessageDialog(this, "Lỗi khi tìm hợp đồng: " + ex.getMessage());
+    }
+}
 
     private void showSearchHopDongDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Tìm kiếm hợp đồng", true);

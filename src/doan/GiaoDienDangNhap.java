@@ -638,18 +638,28 @@ public class GiaoDienDangNhap extends JFrame {
                             "Lỗi",
                             JOptionPane.ERROR_MESSAGE);
                     }
-                } else if (username.startsWith("nvdp_")) {
+                } else if (username.startsWith("nvdp")) {
                     // Kiểm tra đăng nhập nhân viên điều phối
+                    String dbUsername = username;
+                    if (username.endsWith("_demo")) {
+                        // Remove "_demo" suffix for database check
+                        dbUsername = username.substring(0, username.length() - 5);
+                    }
+                    
                     String sql = "SELECT MaNvdp, TenNvdp FROM NhanVienDieuPhoi WHERE Username = ? AND Password = ?";
                     PreparedStatement pstmt = conn.prepareStatement(sql);
-                    pstmt.setString(1, username);
+                    pstmt.setString(1, dbUsername);
                     pstmt.setString(2, password);
                     ResultSet rs = pstmt.executeQuery();
                     
                     if (rs.next()) {
                         String ma = rs.getString("MaNvdp");
                         String ten = rs.getString("TenNvdp");
-                        new QuanLyRacThaiUI(ma, ten).setVisible(true);
+                        if (username.endsWith("_demo")) {
+                            new XuLyDongThoiUI(ma, ten).setVisible(true);
+                        } else {
+                            new QuanLyRacThaiUI(ma, ten).setVisible(true);
+                        }
                         this.dispose();
                     } else {
                         JOptionPane.showMessageDialog(this,

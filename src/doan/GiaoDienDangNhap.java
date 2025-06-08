@@ -594,7 +594,7 @@ public class GiaoDienDangNhap extends JFrame {
                 Connection conn = ConnectionJDBC.getConnection();
                 
                 // Kiểm tra prefix của username
-                if (username.startsWith("ct_")) {
+                if (username.startsWith("ct_") || username.startsWith("dn_")) {
                     // Kiểm tra đăng nhập chủ thải
                     String sql = "SELECT MaChuThai, HoTen FROM ChuThai WHERE Username = ? AND Password = ?";
                     PreparedStatement pstmt = conn.prepareStatement(sql);

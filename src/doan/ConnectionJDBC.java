@@ -8,7 +8,7 @@ public class ConnectionJDBC {
     private static final String HOSTNAME = "LAPTOP-GLGO9P0T";
     private static final String PORT = "1521";
     private static final String SID = "orcl";
-    private static final String USERNAME = "citygreenfinal";
+    private static final String USERNAME = "citygreen076";
     private static final String PASSWORD = "abc";
 
     // Kết nối mặc định

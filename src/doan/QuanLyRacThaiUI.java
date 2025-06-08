@@ -1,3 +1,4 @@
+
 package doan;
 
 import javax.swing.*;
@@ -74,6 +75,7 @@ public class QuanLyRacThaiUI extends JFrame {
     private int currentMonth = 1; // Mặc định là tháng 1
     private int currentYear = Calendar.getInstance().get(Calendar.YEAR); // Năm hiện tại
     private JDateChooser dateChooser; // Add date chooser as class field
+    private JDateChooser revenueDateChooser; // Add date chooser for revenue statistics
 
     public QuanLyRacThaiUI() {
         this(null, null);
@@ -5552,150 +5554,140 @@ public class QuanLyRacThaiUI extends JFrame {
         }
     }
 
-   private void showEditHopDongDialog(DefaultTableModel model, int selectedRow) {
-    if (selectedRow == -1) {
-        JOptionPane.showMessageDialog(this, "Vui lòng chọn hợp đồng cần sửa!");
-        return;
-    }
-
-    String maHD = model.getValueAt(selectedRow, 0).toString();
-    try {
-        Connection conn = ConnectionJDBC.getConnection();
-        String sql = "SELECT * FROM HopDong WHERE MaHopDong = ?";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, Integer.parseInt(maHD.trim()));
-            ResultSet rs = pstmt.executeQuery();
-
-            if (!rs.next()) {
-                JOptionPane.showMessageDialog(this, "Không tìm thấy hợp đồng với mã " + maHD);
-                return;
-            }
-
-            // Tạo dialog sửa hợp đồng
-            JDialog dialog = new JDialog(this, "Sửa hợp đồng", true);
-            dialog.setLayout(new BorderLayout(10, 10));
-            dialog.setSize(400, 500);
-            dialog.setLocationRelativeTo(this);
-
-            JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
-            formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-            formPanel.add(new JLabel("Mã chủ thải:"));
-            JTextField maChuThaiField = new JTextField(String.valueOf(rs.getInt("MaChuThai")));
-            formPanel.add(maChuThaiField);
-
-            formPanel.add(new JLabel("Loại hợp đồng:"));
-            JTextField loaiHopDongField = new JTextField(rs.getString("LoaiHopDong"));
-            formPanel.add(loaiHopDongField);
-
-            // Spinner ngày bắt đầu
-            formPanel.add(new JLabel("Ngày bắt đầu:"));
-            SpinnerDateModel startDateModel = new SpinnerDateModel();
-            JSpinner ngayBatDauSpinner = new JSpinner(startDateModel);
-            JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(ngayBatDauSpinner, "dd/MM/yyyy");
-            ngayBatDauSpinner.setEditor(startDateEditor);
-            ngayBatDauSpinner.setValue(rs.getDate("NgBatDau"));
-            formPanel.add(ngayBatDauSpinner);
-
-            // Spinner ngày kết thúc
-            formPanel.add(new JLabel("Ngày kết thúc:"));
-            SpinnerDateModel endDateModel = new SpinnerDateModel();
-            JSpinner ngayKetThucSpinner = new JSpinner(endDateModel);
-            JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(ngayKetThucSpinner, "dd/MM/yyyy");
-            ngayKetThucSpinner.setEditor(endDateEditor);
-            ngayKetThucSpinner.setValue(rs.getDate("NgKetThuc"));
-            formPanel.add(ngayKetThucSpinner);
-
-            formPanel.add(new JLabel("Địa chỉ thu gom:"));
-            JTextField diaChiField = new JTextField(rs.getString("DiaChiThuGom"));
-            formPanel.add(diaChiField);
-
-            formPanel.add(new JLabel("Mô tả:"));
-            JTextField moTaField = new JTextField(rs.getString("MoTa"));
-            formPanel.add(moTaField);
-
-            formPanel.add(new JLabel("Trạng thái:"));
-            String[] trangThaiOptions = {"Hoạt động", "Chờ duyệt", "Tạm dừng"};
-            JComboBox<String> trangThaiCombo = new JComboBox<>(trangThaiOptions);
-            String trangThaiHienTai = rs.getString("TrangThai");
-            if (trangThaiHienTai != null) {
-                trangThaiCombo.setSelectedItem(trangThaiHienTai);
-            }
-            formPanel.add(trangThaiCombo);
-
-            JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-            JButton saveButton = new JButton("Lưu");
-            JButton cancelButton = new JButton("Hủy");
-
-            styleButton(saveButton);
-            styleButton(cancelButton);
-
-            buttonPanel.add(cancelButton);
-            buttonPanel.add(saveButton);
-
-            saveButton.addActionListener(e -> {
-                try {
-                    if (maChuThaiField.getText().trim().isEmpty()
-                            || loaiHopDongField.getText().trim().isEmpty()
-                            || trangThaiCombo.getSelectedItem() == null) {
-                        JOptionPane.showMessageDialog(dialog, "Vui lòng điền đầy đủ thông tin!");
-                        return;
-                    }
-
-                    Date ngayBatDau = (Date) ngayBatDauSpinner.getValue();
-                    Date ngayKetThuc = (Date) ngayKetThucSpinner.getValue();
-
-                    conn.setAutoCommit(false); // Bắt đầu transaction
-                    // conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE); // (Tùy chọn)
-
-                    String updateSql = "UPDATE HopDong SET MaChuThai = ?, LoaiHopDong = ?, NgBatDau = ?, NgKetThuc = ?, DiaChiThuGom = ? ,MoTa = ?, TrangThai = ? WHERE MaHopDong = ?";
-                    try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
-                        updateStmt.setInt(1, Integer.parseInt(maChuThaiField.getText().trim()));
-                        updateStmt.setString(2, loaiHopDongField.getText().trim());
-                        updateStmt.setDate(3, new java.sql.Date(ngayBatDau.getTime()));
-                        updateStmt.setDate(4, new java.sql.Date(ngayKetThuc.getTime()));
-                        updateStmt.setString(5, diaChiField.getText().trim());
-                        updateStmt.setString(6, moTaField.getText().trim());
-                        updateStmt.setString(7, (String) trangThaiCombo.getSelectedItem());
-                        updateStmt.setInt(8, Integer.parseInt(maHD.trim()));
-
-                        updateStmt.executeUpdate();
-                        dialog.dispose();
-                        // Giữ khóa 10 giây trước khi commit
-                        Thread.sleep(10000);
-
-                        conn.commit(); // Commit thay đổi sau khi giữ khóa
-                        JOptionPane.showMessageDialog(dialog, "Cập nhật hợp đồng thành công!");
-                        loadHopDongData(model);
-//                        dialog.dispose();
-                    }
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(dialog, "Giá trị không hợp lệ!");
-                } catch (SQLException ex) {
-                    try {
-                        conn.rollback(); // Rollback nếu có lỗi
-                    } catch (SQLException rollbackEx) {
-                        rollbackEx.printStackTrace();
-                    }
-                    JOptionPane.showMessageDialog(dialog, "Lỗi khi cập nhật hợp đồng: " + ex.getMessage());
-                } catch (InterruptedException ex) {
-                    Thread.currentThread().interrupt(); // Phục hồi trạng thái bị gián đoạn
-                }
-            });
-
-            cancelButton.addActionListener(e -> dialog.dispose());
-
-            dialog.add(formPanel, BorderLayout.CENTER);
-            dialog.add(buttonPanel, BorderLayout.SOUTH);
-            dialog.setVisible(true);
+    private void showEditHopDongDialog(DefaultTableModel model, int selectedRow) {
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(this, "Vui lòng chọn hợp đồng cần sửa!");
+            return;
         }
-    } catch (NumberFormatException ex) {
-        JOptionPane.showMessageDialog(this, "Mã hợp đồng không hợp lệ!");
-    } catch (SQLException ex) {
-        JOptionPane.showMessageDialog(this, "Lỗi khi tìm hợp đồng: " + ex.getMessage());
+
+        String maHD = model.getValueAt(selectedRow, 0).toString();
+        try {
+            Connection conn = ConnectionJDBC.getConnection();
+            String sql = "SELECT * FROM HopDong WHERE MaHopDong = ?";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+                pstmt.setInt(1, Integer.parseInt(maHD.trim()));
+                ResultSet rs = pstmt.executeQuery();
+
+                if (!rs.next()) {
+                    JOptionPane.showMessageDialog(this, "Không tìm thấy hợp đồng với mã " + maHD);
+                    return;
+                }
+
+                // Tạo dialog sửa hợp đồng
+                JDialog dialog = new JDialog(this, "Sửa hợp đồng", true);
+                dialog.setLayout(new BorderLayout(10, 10));
+                dialog.setSize(400, 500);
+                dialog.setLocationRelativeTo(this);
+
+                JPanel formPanel = new JPanel(new GridLayout(8, 2, 10, 10));
+                formPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+                formPanel.add(new JLabel("Mã chủ thải:"));
+                JTextField maChuThaiField = new JTextField(String.valueOf(rs.getInt("MaChuThai")));
+                formPanel.add(maChuThaiField);
+
+                formPanel.add(new JLabel("Loại hợp đồng:"));
+                JTextField loaiHopDongField = new JTextField(rs.getString("LoaiHopDong"));
+                formPanel.add(loaiHopDongField);
+
+                // Spinner ngày bắt đầu
+                formPanel.add(new JLabel("Ngày bắt đầu:"));
+                SpinnerDateModel startDateModel = new SpinnerDateModel();
+                JSpinner ngayBatDauSpinner = new JSpinner(startDateModel);
+                JSpinner.DateEditor startDateEditor = new JSpinner.DateEditor(ngayBatDauSpinner, "dd/MM/yyyy");
+                ngayBatDauSpinner.setEditor(startDateEditor);
+                ngayBatDauSpinner.setValue(rs.getDate("NgBatDau"));
+                formPanel.add(ngayBatDauSpinner);
+
+                // Spinner ngày kết thúc
+                formPanel.add(new JLabel("Ngày kết thúc:"));
+                SpinnerDateModel endDateModel = new SpinnerDateModel();
+                JSpinner ngayKetThucSpinner = new JSpinner(endDateModel);
+                JSpinner.DateEditor endDateEditor = new JSpinner.DateEditor(ngayKetThucSpinner, "dd/MM/yyyy");
+                ngayKetThucSpinner.setEditor(endDateEditor);
+                ngayKetThucSpinner.setValue(rs.getDate("NgKetThuc"));
+                formPanel.add(ngayKetThucSpinner);
+
+                formPanel.add(new JLabel("Địa chỉ thu gom:"));
+                JTextField diaChiField = new JTextField(rs.getString("DiaChiThuGom"));
+                formPanel.add(diaChiField);
+
+                formPanel.add(new JLabel("Mô tả:"));
+                JTextField moTaField = new JTextField(rs.getString("MoTa"));
+                formPanel.add(moTaField);
+
+                formPanel.add(new JLabel("Trạng thái:"));
+                String[] trangThaiOptions = {"Hoạt động", "Chờ duyệt", "Tạm dừng"};
+                JComboBox<String> trangThaiCombo = new JComboBox<>(trangThaiOptions);
+                String trangThaiHienTai = rs.getString("TrangThai");
+                if (trangThaiHienTai != null) {
+                    trangThaiCombo.setSelectedItem(trangThaiHienTai);
+                }
+                formPanel.add(trangThaiCombo);
+
+                JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+                JButton saveButton = new JButton("Lưu");
+                JButton cancelButton = new JButton("Hủy");
+
+                styleButton(saveButton);
+                styleButton(cancelButton);
+
+                buttonPanel.add(cancelButton);
+                buttonPanel.add(saveButton);
+
+                saveButton.addActionListener(e -> {
+                    try {
+                        // Validate input
+                        if (maChuThaiField.getText().trim().isEmpty()
+                                || loaiHopDongField.getText().trim().isEmpty()
+                                || trangThaiCombo.getSelectedItem() == null) {
+                            JOptionPane.showMessageDialog(dialog, "Vui lòng điền đầy đủ thông tin!");
+                            return;
+                        }
+
+                        // Lấy ngày từ spinner
+                        Date ngayBatDau = (Date) ngayBatDauSpinner.getValue();
+                        Date ngayKetThuc = (Date) ngayKetThucSpinner.getValue();
+
+                        // Cập nhật database
+                        String updateSql = "UPDATE HopDong SET MaChuThai = ?, LoaiHopDong = ?, NgBatDau = ?, NgKetThuc = ?, DiaChiThuGom = ? ,MoTa = ?, TrangThai = ? WHERE MaHopDong = ?";
+
+                        try (PreparedStatement updateStmt = conn.prepareStatement(updateSql)) {
+                            updateStmt.setInt(1, Integer.parseInt(maChuThaiField.getText().trim()));
+                            updateStmt.setString(2, loaiHopDongField.getText().trim());
+                            updateStmt.setDate(3, new java.sql.Date(ngayBatDau.getTime()));
+                            updateStmt.setDate(4, new java.sql.Date(ngayKetThuc.getTime()));
+                            updateStmt.setString(5, diaChiField.getText().trim());
+                            updateStmt.setString(6, moTaField.getText().trim());
+                            updateStmt.setString(7, (String) trangThaiCombo.getSelectedItem());
+
+                            updateStmt.setInt(8, Integer.parseInt(maHD.trim()));
+
+                            updateStmt.executeUpdate();
+                            JOptionPane.showMessageDialog(dialog, "Cập nhật hợp đồng thành công!");
+                            loadHopDongData(model);
+                            dialog.dispose();
+                        }
+                    } catch (NumberFormatException ex) {
+                        JOptionPane.showMessageDialog(dialog, "Giá trị không hợp lệ!");
+                    } catch (SQLException ex) {
+                        JOptionPane.showMessageDialog(dialog, "Lỗi khi cập nhật hợp đồng: " + ex.getMessage());
+                    }
+                });
+
+                cancelButton.addActionListener(e -> dialog.dispose());
+
+                dialog.add(formPanel, BorderLayout.CENTER);
+                dialog.add(buttonPanel, BorderLayout.SOUTH);
+                dialog.setVisible(true);
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Mã hợp đồng không hợp lệ!");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(this, "Lỗi khi tìm hợp đồng: " + ex.getMessage());
+        }
     }
-}
 
     private void showSearchHopDongDialog(DefaultTableModel model) {
         JDialog dialog = new JDialog(this, "Tìm kiếm hợp đồng", true);
@@ -7252,6 +7244,7 @@ public class QuanLyRacThaiUI extends JFrame {
         titleLabel.setFont(titleFont);
 
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        controlPanel.setBackground(Color.WHITE);
 
         String[] chartTypes = {
             "Thống kê khối lượng rác",
@@ -7262,9 +7255,16 @@ public class QuanLyRacThaiUI extends JFrame {
         };
         JComboBox<String> chartTypePicker = new JComboBox<>(chartTypes);
 
+        // Date chooser for revenue (year only)
+        revenueDateChooser = new JDateChooser();
+        ((JTextFieldDateEditor) revenueDateChooser.getDateEditor()).setDateFormatString("yyyy");
+        revenueDateChooser.setPreferredSize(new Dimension(100, 30));
+        revenueDateChooser.setDate(new Date());
+
+        // Date chooser for other charts (full date)
         dateChooser = new JDateChooser();
-        ((JTextFieldDateEditor) dateChooser.getDateEditor()).setDateFormatString("yyyy");
-        dateChooser.setPreferredSize(new Dimension(100, 30));
+        ((JTextFieldDateEditor) dateChooser.getDateEditor()).setDateFormatString("dd/MM/yyyy");
+        dateChooser.setPreferredSize(new Dimension(150, 30));
         dateChooser.setDate(new Date());
 
         JButton exportButton = new JButton("Xuất báo cáo");
@@ -7272,8 +7272,27 @@ public class QuanLyRacThaiUI extends JFrame {
 
         controlPanel.add(new JLabel("Loại biểu đồ: "));
         controlPanel.add(chartTypePicker);
-        controlPanel.add(new JLabel("Chọn năm: "));
-        controlPanel.add(dateChooser);
+        
+        // Panel chứa các date chooser
+        JPanel dateChooserPanel = new JPanel(new CardLayout());
+        dateChooserPanel.setBackground(Color.WHITE);
+        
+        // Panel cho revenue date chooser
+        JPanel revenueDatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        revenueDatePanel.setBackground(Color.WHITE);
+        revenueDatePanel.add(new JLabel("Chọn năm: "));
+        revenueDatePanel.add(revenueDateChooser);
+        
+        // Panel cho other date chooser
+        JPanel otherDatePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        otherDatePanel.setBackground(Color.WHITE);
+        otherDatePanel.add(new JLabel("Chọn ngày: "));
+        otherDatePanel.add(dateChooser);
+        
+        dateChooserPanel.add(otherDatePanel, "OTHER");
+        dateChooserPanel.add(revenueDatePanel, "REVENUE");
+        
+        controlPanel.add(dateChooserPanel);
         controlPanel.add(exportButton);
 
         exportButton.addActionListener(e
@@ -7294,7 +7313,7 @@ public class QuanLyRacThaiUI extends JFrame {
         Calendar cal = Calendar.getInstance();
         cal.setTime(dateChooser.getDate());
         currentYear = cal.get(Calendar.YEAR);
-        currentMonth = 1; // tháng mặc định (vì chỉ lấy năm)
+        currentMonth = cal.get(Calendar.MONTH) + 1;
 
         // Thêm biểu đồ ban đầu
         chartPanel.add(createWasteChart(currentMonth, currentYear, dateChooser), "Thống kê khối lượng rác");
@@ -7305,27 +7324,41 @@ public class QuanLyRacThaiUI extends JFrame {
 
         // Bắt sự kiện đổi loại biểu đồ
         chartTypePicker.addActionListener(e -> {
-            CardLayout cl = (CardLayout) chartPanel.getLayout();
-            cl.show(chartPanel, (String) chartTypePicker.getSelectedItem());
+            String selectedChart = (String) chartTypePicker.getSelectedItem();
+            
+            // Switch date chooser based on chart type
+            CardLayout dateLayout = (CardLayout) dateChooserPanel.getLayout();
+            if ("Thống kê doanh thu".equals(selectedChart)) {
+                dateLayout.show(dateChooserPanel, "REVENUE");
+            } else {
+                dateLayout.show(dateChooserPanel, "OTHER");
+            }
+            
+            // Cập nhật biểu đồ mới
+            updateCharts(chartPanel, selectedChart);
         });
 
-        // Cập nhật biểu đồ khi đổi năm
+        // Cập nhật biểu đồ khi đổi ngày (cho các biểu đồ không phải doanh thu)
         dateChooser.addPropertyChangeListener("date", e -> {
-            if (dateChooser.getDate() != null) {
+            if (dateChooser.getDate() != null && !"Thống kê doanh thu".equals(chartTypePicker.getSelectedItem())) {
                 Calendar newCal = Calendar.getInstance();
                 newCal.setTime(dateChooser.getDate());
                 currentYear = newCal.get(Calendar.YEAR);
-                currentMonth = 1; // gán lại tháng mặc định (không lấy Calendar.MONTH)
+                currentMonth = newCal.get(Calendar.MONTH) + 1;
 
-                chartPanel.removeAll();
-                chartPanel.add(createWasteChart(currentMonth, currentYear, dateChooser), "Thống kê khối lượng rác");
-                chartPanel.add(createRevenueChart(currentMonth, currentYear), "Thống kê doanh thu");
-                chartPanel.add(createStaffChart(), "Thống kê nhân viên");
-                chartPanel.add(createRequestChart(currentMonth, currentYear), "Thống kê yêu cầu đặt lịch");
-                chartPanel.add(createCustomerChart(currentMonth, currentYear), "Thống kê khách hàng");
+                updateCharts(chartPanel, chartTypePicker.getSelectedItem().toString());
+            }
+        });
 
-                CardLayout cl = (CardLayout) chartPanel.getLayout();
-                cl.show(chartPanel, (String) chartTypePicker.getSelectedItem());
+        // Cập nhật biểu đồ khi đổi năm (cho biểu đồ doanh thu)
+        revenueDateChooser.addPropertyChangeListener("date", e -> {
+            if (revenueDateChooser.getDate() != null && "Thống kê doanh thu".equals(chartTypePicker.getSelectedItem())) {
+                Calendar newCal = Calendar.getInstance();
+                newCal.setTime(revenueDateChooser.getDate());
+                currentYear = newCal.get(Calendar.YEAR);
+                currentMonth = 1; // Với doanh thu chỉ quan tâm năm
+
+                updateCharts(chartPanel, chartTypePicker.getSelectedItem().toString());
             }
         });
 
@@ -7334,6 +7367,57 @@ public class QuanLyRacThaiUI extends JFrame {
         panel.add(contentPanel, BorderLayout.CENTER);
 
         return panel;
+    }
+
+    // Helper method to update charts
+    private void updateCharts(JPanel chartPanel, String selectedChart) {
+        try {
+            // Lấy ngày tháng năm hiện tại từ dateChooser
+            Date selectedDate = dateChooser != null ? dateChooser.getDate() : new Date();
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(selectedDate);
+            int selectedMonth = cal.get(Calendar.MONTH) + 1; // Calendar.MONTH bắt đầu từ 0
+            int selectedYear = cal.get(Calendar.YEAR);
+            
+            // Chỉ cập nhật biểu đồ được chọn
+            ChartPanel newChartPanel = null;
+            
+            switch (selectedChart) {
+                case "Thống kê khối lượng rác":
+                    newChartPanel = createWasteChart(selectedMonth, selectedYear, dateChooser);
+                    break;
+                case "Thống kê doanh thu":
+                    newChartPanel = createRevenueChart(selectedMonth, selectedYear);
+                    break;
+                case "Thống kê nhân viên":
+                    newChartPanel = createStaffChart();
+                    break;
+                case "Thống kê yêu cầu đặt lịch":
+                    newChartPanel = createRequestChart(selectedMonth, selectedYear);
+                    break;
+                case "Thống kê khách hàng":
+                    newChartPanel = createCustomerChart(selectedMonth, selectedYear);
+                    break;
+            }
+            
+            // Xóa tất cả các components hiện tại trước khi thêm biểu đồ mới
+            chartPanel.removeAll();
+            
+            if (newChartPanel != null) {
+                // Thêm biểu đồ mới
+                chartPanel.add(newChartPanel);
+                
+                // Cập nhật giao diện ngay lập tức
+                chartPanel.revalidate();
+                chartPanel.repaint();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(this,
+                "Lỗi khi cập nhật biểu đồ: " + ex.getMessage(),
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     private void updateAllCharts() {
@@ -8855,72 +8939,94 @@ public class QuanLyRacThaiUI extends JFrame {
     }
 
     private ChartPanel createCustomerChart(int month, int year) {
-    DefaultPieDataset dataset = new DefaultPieDataset();
+        DefaultPieDataset dataset = new DefaultPieDataset();
 
-    // ✅ Nếu tháng không hợp lệ, gán mặc định là 1
-    if (month < 1 || month > 12) {
-        System.out.println("Tháng không hợp lệ (" + month + "). Gán mặc định là tháng 1.");
-        month = 1;
-    }
-
-    try {
-        Connection conn = ConnectionJDBC.getConnection();
-        String query = "SELECT q.TenQuan, COUNT(DISTINCT hd.MaChuThai) as SoLuongKhachHang "
-                + "FROM Quan q "
-                + "JOIN TuyenDuongThuGom t ON t.KhuVuc = q.MaQuan "
-                + "JOIN LichThuGom l ON l.MaTuyen = t.MaTuyen "
-                + "JOIN YeuCauDatLich y ON y.MaLich = l.MaLich "
-                + "JOIN ChuThai ct ON ct.MaChuThai = y.MaChuThai "
-                + "JOIN HopDong hd ON hd.MaChuThai = ct.MaChuThai "
-                + "WHERE hd.TrangThai = 'Hoạt động' "
-                + "AND hd.NgKetThuc >= ? "
-                + "GROUP BY q.MaQuan, q.TenQuan "
-                + "ORDER BY q.TenQuan";
-
-        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
-            LocalDate localDate = LocalDate.of(year, month, 1);
-            java.sql.Date sqlDate = java.sql.Date.valueOf(localDate);
-            pstmt.setDate(1, sqlDate);
-
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                dataset.setValue(rs.getString("TenQuan"), rs.getInt("SoLuongKhachHang"));
-            }
+        // ✅ Nếu tháng không hợp lệ, gán mặc định là 1
+        if (month < 1 || month > 12) {
+            System.out.println("Tháng không hợp lệ (" + month + "). Gán mặc định là tháng 1.");
+            month = 1;
         }
-    } catch (SQLException ex) {
-        ex.printStackTrace();
-        JOptionPane.showMessageDialog(null,
-                "Lỗi khi lấy dữ liệu khách hàng: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+
+        try {
+            Connection conn = ConnectionJDBC.getConnection();
+            String query = "SELECT q.TenQuan, COUNT(DISTINCT hd.MaChuThai) as SoLuongKhachHang "
+                    + "FROM Quan q "
+                    + "JOIN TuyenDuongThuGom t ON t.KhuVuc = q.MaQuan "
+                    + "JOIN LichThuGom l ON l.MaTuyen = t.MaTuyen "
+                    + "JOIN YeuCauDatLich y ON y.MaLich = l.MaLich "
+                    + "JOIN ChuThai ct ON ct.MaChuThai = y.MaChuThai "
+                    + "JOIN HopDong hd ON hd.MaChuThai = ct.MaChuThai "
+                    + "WHERE hd.TrangThai = 'Hoạt động' "
+                    + "AND TO_DATE(?, 'DD/MM/YYYY') BETWEEN hd.NgBatDau AND hd.NgKetThuc "
+                    + "AND LAST_DAY(TO_DATE(?, 'DD/MM/YYYY')) <= hd.NgKetThuc "
+                    + "GROUP BY q.MaQuan, q.TenQuan "
+                    + "ORDER BY q.TenQuan";
+
+            try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+                // Format date string
+                String dateStr = String.format("%02d/%02d/%d", 1, month, year);
+                pstmt.setString(1, dateStr);
+                pstmt.setString(2, dateStr);
+
+                ResultSet rs = pstmt.executeQuery();
+                while (rs.next()) {
+                    dataset.setValue(rs.getString("TenQuan"), rs.getInt("SoLuongKhachHang"));
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+            JOptionPane.showMessageDialog(null,
+                    "Lỗi khi lấy dữ liệu khách hàng: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+
+        // Format title to show full date range of the month
+        Calendar cal = Calendar.getInstance();
+        cal.set(year, month - 1, 1);
+        String startDate = String.format("%02d/%02d/%d", 1, month, year);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String endDate = String.format("%02d/%02d/%d", cal.get(Calendar.DAY_OF_MONTH), month, year);
+
+        JFreeChart chart = ChartFactory.createPieChart3D(
+                String.format("Thống kê khách hàng theo quận (%s - %s)", startDate, endDate),
+                dataset,
+                true,
+                true,
+                false
+        );
+
+        PiePlot3D plot = (PiePlot3D) chart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setOutlinePaint(null);
+        plot.setStartAngle(290);
+        plot.setDepthFactor(0.2);
+
+        // Configure labels to show both count and percentage
+        plot.setLabelGenerator(new StandardPieSectionLabelGenerator(
+                "{0}: {1} KH ({2})", // Format: name: count KH (percent)
+                NumberFormat.getNumberInstance(),
+                NumberFormat.getPercentInstance()
+        ));
+
+        // Adjust label font and color for better visibility
+        plot.setLabelFont(new Font("Arial", Font.BOLD, 12));
+        plot.setLabelBackgroundPaint(new Color(255, 255, 255, 180)); // Semi-transparent white
+        plot.setLabelOutlinePaint(null);
+        plot.setLabelShadowPaint(null);
+
+        int index = 0;
+        for (Object key : dataset.getKeys()) {
+            float hue = index / (float) dataset.getItemCount();
+            Color color = Color.getHSBColor(hue, 0.7f, 0.95f);
+            plot.setSectionPaint((Comparable<?>) key, color);
+            index++;
+        }
+
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setBackground(Color.WHITE);
+        return chartPanel;
     }
-
-    JFreeChart chart = ChartFactory.createPieChart3D(
-            "Thống kê khách hàng theo quận",
-            dataset,
-            true,
-            true,
-            false
-    );
-
-    PiePlot3D plot = (PiePlot3D) chart.getPlot();
-    plot.setBackgroundPaint(Color.WHITE);
-    plot.setOutlinePaint(null);
-    plot.setStartAngle(290);
-    plot.setDepthFactor(0.2);
-
-    int index = 0;
-    for (Object key : dataset.getKeys()) {
-        float hue = index / (float) dataset.getItemCount();
-        Color color = Color.getHSBColor(hue, 0.7f, 0.95f);
-        plot.setSectionPaint((Comparable<?>) key, color);
-        index++;
-    }
-
-    ChartPanel chartPanel = new ChartPanel(chart);
-    chartPanel.setBackground(Color.WHITE);
-    return chartPanel;
-}
 
     private ChartPanel createWasteChart(int month, int year, JDateChooser dateChooser) {
         DefaultPieDataset wasteDataset = new DefaultPieDataset();
@@ -8938,10 +9044,12 @@ public class QuanLyRacThaiUI extends JFrame {
                     + "  JOIN HopDong hd ON cthd.MaHopDong = hd.MaHopDong "
                     + "  WHERE hd.TrangThai = 'Hoạt động' "
                     + "    AND TO_DATE(?, 'DD/MM/YYYY') BETWEEN hd.NgBatDau AND hd.NgKetThuc "
+                    + "    AND LAST_DAY(TO_DATE(?, 'DD/MM/YYYY')) <= hd.NgKetThuc " // Thêm điều kiện kiểm tra ngày cuối tháng
                     + ") "
-                    + "SELECT TenDichVu, SUM(KhoiLuong / TotalMonths) as TongKL "
+                    + "SELECT TenDichVu, ROUND(SUM(KhoiLuong / TotalMonths), 2) as TongKL "
                     + "FROM ContractMonths "
-                    + "GROUP BY TenDichVu";
+                    + "GROUP BY TenDichVu "
+                    + "ORDER BY TenDichVu";
             try (PreparedStatement pstmt = conn.prepareStatement(wasteQuery)) {
                 // Get the exact selected date from JDateChooser
                 Calendar cal = Calendar.getInstance();
@@ -8951,7 +9059,9 @@ public class QuanLyRacThaiUI extends JFrame {
                     selectedDate = cal.getTime(); // Use first day of month if no date selected
                 }
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-                pstmt.setString(1, sdf.format(selectedDate));
+                String dateStr = sdf.format(selectedDate);
+                pstmt.setString(1, dateStr);
+                pstmt.setString(2, dateStr); // Thêm tham số cho điều kiện mới
                 ResultSet rs = pstmt.executeQuery();
                 while (rs.next()) {
                     wasteDataset.setValue(rs.getString("TenDichVu"), rs.getDouble("TongKL"));
@@ -8965,8 +9075,15 @@ public class QuanLyRacThaiUI extends JFrame {
                     JOptionPane.ERROR_MESSAGE);
         }
 
+        // Format title to show full date range of the month
+        Calendar cal = Calendar.getInstance();
+        cal.set(year, month - 1, 1);
+        String startDate = String.format("%02d/%02d/%d", 1, month, year);
+        cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+        String endDate = String.format("%02d/%02d/%d", cal.get(Calendar.DAY_OF_MONTH), month, year);
+
         JFreeChart wasteChart = ChartFactory.createPieChart(
-                String.format("Thống kê khối lượng rác - Tháng %02d/%d", month, year),
+                String.format("Thống kê khối lượng rác (%s - %s)", startDate, endDate),
                 wasteDataset,
                 true,
                 true,
@@ -8980,9 +9097,9 @@ public class QuanLyRacThaiUI extends JFrame {
         wastePlot.setSectionPaint("Rác tái chế", new Color(52, 152, 219));
         wastePlot.setSectionPaint("Rác nguy hại", new Color(231, 76, 60));
 
-        // Configure labels to show percentages
+        // Configure labels to show percentages and values
         wastePlot.setLabelGenerator(new StandardPieSectionLabelGenerator(
-                "{0}: {2}%", // Format: name: percent%
+                "{0}: {1} kg ({2})", // Format: name: value kg (percent)
                 NumberFormat.getNumberInstance(),
                 NumberFormat.getPercentInstance()
         ));

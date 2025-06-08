@@ -8,6 +8,7 @@ import java.sql.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.Vector;
+import static javax.swing.WindowConstants.EXIT_ON_CLOSE;
 import javax.swing.table.DefaultTableModel;
 
 public class XuLyDongThoiUI extends JFrame {
@@ -561,6 +562,71 @@ public class XuLyDongThoiUI extends JFrame {
 
     // Add method implementations for database operations
 
+    private void handleSQLException(SQLException ex, String operation) {
+        String errorMessage = ex.getMessage();
+        if (errorMessage != null && (errorMessage.contains("ORA-00060") || errorMessage.toLowerCase().contains("deadlock"))) {
+            try {
+                if (isInTransaction && transactionConnection != null) {
+                    transactionConnection.rollback();
+                    log(operation + ": Deadlock detected - Transaction automatically rolled back");
+                    JOptionPane.showMessageDialog(this,
+                        "Phát hiện deadlock - Giao dịch đã được tự động rollback.\nVui lòng thử lại sau.",
+                        "Cảnh báo",
+                        JOptionPane.WARNING_MESSAGE);
+                    
+                    // Reset transaction state
+                    transactionConnection.close();
+                    transactionConnection = null;
+                    isInTransaction = false;
+                    
+                    // Update UI state
+                    for (Window window : Window.getWindows()) {
+                        if (window instanceof XuLyDongThoiUI) {
+                            XuLyDongThoiUI ui = (XuLyDongThoiUI) window;
+                            // Find and update transaction control buttons
+                            for (Component comp : ui.getContentPane().getComponents()) {
+                                if (comp instanceof JPanel) {
+                                    updateTransactionControls((JPanel) comp);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (SQLException rollbackEx) {
+                log(operation + ": Error during rollback - " + rollbackEx.getMessage());
+            }
+        } else {
+            log(operation + ": Error - " + errorMessage);
+            JOptionPane.showMessageDialog(this, 
+                operation + " error: " + errorMessage,
+                "Lỗi",
+                JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateTransactionControls(JPanel panel) {
+        for (Component comp : panel.getComponents()) {
+            if (comp instanceof JPanel) {
+                JPanel subPanel = (JPanel) comp;
+                if (subPanel.getLayout() instanceof FlowLayout) {
+                    for (Component btn : subPanel.getComponents()) {
+                        if (btn instanceof JButton) {
+                            JButton button = (JButton) btn;
+                            if (button.getText().equals("Start Transaction")) {
+                                button.setEnabled(true);
+                            } else if (button.getText().equals("COMMIT") || button.getText().equals("ROLLBACK")) {
+                                button.setEnabled(false);
+                            }
+                        } else if (btn instanceof JLabel && btn.toString().contains("Status:")) {
+                            ((JLabel) btn).setText("Status: No Transaction");
+                        }
+                    }
+                }
+                updateTransactionControls(subPanel);
+            }
+        }
+    }
+
     private void readHoaDonData(DefaultTableModel model, JTextArea logArea) {
         if (!isInTransaction) {
             log("READ: No transaction started. Please start a transaction.");
@@ -583,17 +649,16 @@ public class XuLyDongThoiUI extends JFrame {
                 row.add(rs.getObject("SoTien"));
                 row.add(rs.getObject("TinhTrang"));
                 model.addRow(row);
-                    rowCount++;
+                rowCount++;
             }
             log("READ: Retrieved " + rowCount + " records.");
         } catch (SQLException ex) {
-            log("READ: Error reading data - " + ex.getMessage());
-            JOptionPane.showMessageDialog(this, "Error reading data: " + ex.getMessage());
+            handleSQLException(ex, "READ");
         }
     }
 
     private void insertHoaDonData(JTextField maHoaDonField, JTextField maHopDongField, JTextField maNvdpField, JSpinner ngLapSpinner, JTextField soTienField, JComboBox<String> tinhTrangCombo, JTextArea logArea) {
-         if (!isInTransaction) {
+        if (!isInTransaction) {
             log("INSERT: No transaction started. Please start a transaction.");
             JOptionPane.showMessageDialog(this, "Please start a transaction first.");
             return;
@@ -604,7 +669,6 @@ public class XuLyDongThoiUI extends JFrame {
             pstmt.setInt(1, Integer.parseInt(maHoaDonField.getText()));
             pstmt.setInt(2, Integer.parseInt(maHopDongField.getText()));
             pstmt.setInt(3, Integer.parseInt(maNvdpField.getText()));
-            // Get date from JSpinner
             Date selectedDate = (Date) ngLapSpinner.getValue();
             pstmt.setDate(4, new java.sql.Date(selectedDate.getTime()));
             pstmt.setDouble(5, Double.parseDouble(soTienField.getText()));
@@ -613,29 +677,28 @@ public class XuLyDongThoiUI extends JFrame {
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 log("INSERT: Successfully inserted 1 record.");
-                 // Refresh the table after insert if needed (optional, depends on desired behavior)
-                 // readHoaDonData(model, logArea);
             } else {
                 log("INSERT: No records inserted.");
             }
-        } catch (SQLException | NumberFormatException ex) {
-            log("INSERT: Error inserting data - " + ex.getMessage());
-            JOptionPane.showMessageDialog(this, "Error inserting data: " + ex.getMessage());
+        } catch (SQLException ex) {
+            handleSQLException(ex, "INSERT");
+        } catch (NumberFormatException ex) {
+            log("INSERT: Invalid number format - " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Invalid number format: " + ex.getMessage());
         }
     }
 
     private void updateHoaDonData(JTextField maHoaDonField, JTextField maHopDongField, JTextField maNvdpField, JSpinner ngLapSpinner, JTextField soTienField, JComboBox<String> tinhTrangCombo, JTextArea logArea) {
-         if (!isInTransaction) {
+        if (!isInTransaction) {
             log("UPDATE: No transaction started. Please start a transaction.");
             JOptionPane.showMessageDialog(this, "Please start a transaction first.");
             return;
         }
-         log("UPDATE: Attempting to update data...");
+        log("UPDATE: Attempting to update data...");
         String sql = "UPDATE HoaDon SET MaHopDong = ?, MaNvdp = ?, NgLap = ?, SoTien = ?, TinhTrang = ? WHERE MaHoaDon = ?";
-         try (PreparedStatement pstmt = transactionConnection.prepareStatement(sql)) {
+        try (PreparedStatement pstmt = transactionConnection.prepareStatement(sql)) {
             pstmt.setInt(1, Integer.parseInt(maHopDongField.getText()));
             pstmt.setInt(2, Integer.parseInt(maNvdpField.getText()));
-            // Get date from JSpinner
             Date selectedDate = (Date) ngLapSpinner.getValue();
             pstmt.setDate(3, new java.sql.Date(selectedDate.getTime()));
             pstmt.setDouble(4, Double.parseDouble(soTienField.getText()));
@@ -645,14 +708,14 @@ public class XuLyDongThoiUI extends JFrame {
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 log("UPDATE: Successfully updated " + affectedRows + " record(s).");
-                 // Refresh the table after update if needed (optional)
-                 // readHoaDonData(model, logArea);
             } else {
                 log("UPDATE: No records updated with the provided ID.");
             }
-        } catch (SQLException | NumberFormatException ex) {
-             log("UPDATE: Error updating data - " + ex.getMessage());
-            JOptionPane.showMessageDialog(this, "Error updating data: " + ex.getMessage());
+        } catch (SQLException ex) {
+            handleSQLException(ex, "UPDATE");
+        } catch (NumberFormatException ex) {
+            log("UPDATE: Invalid number format - " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Invalid number format: " + ex.getMessage());
         }
     }
 
@@ -670,14 +733,14 @@ public class XuLyDongThoiUI extends JFrame {
             int affectedRows = pstmt.executeUpdate();
             if (affectedRows > 0) {
                 log("DELETE: Successfully deleted " + affectedRows + " record(s).");
-                // Refresh the table after delete if needed (optional)
-                // readHoaDonData(model, logArea);
             } else {
                 log("DELETE: No records deleted with the provided ID.");
             }
-        } catch (SQLException | NumberFormatException ex) {
-             log("DELETE: Error deleting data - " + ex.getMessage());
-            JOptionPane.showMessageDialog(this, "Error deleting data: " + ex.getMessage());
+        } catch (SQLException ex) {
+            handleSQLException(ex, "DELETE");
+        } catch (NumberFormatException ex) {
+            log("DELETE: Invalid number format - " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, "Invalid number format: " + ex.getMessage());
         }
     }
 

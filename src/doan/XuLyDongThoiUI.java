@@ -930,6 +930,17 @@ public class XuLyDongThoiUI extends JFrame {
 
         JTable table = new JTable(model);
 
+        // Transaction Log
+        JPanel transactionLogPanel = new JPanel(new BorderLayout());
+        transactionLogPanel.setBorder(BorderFactory.createTitledBorder("Transaction Log"));
+        transactionLogPanel.setBackground(Color.WHITE);
+
+        JTextArea logArea = new JTextArea(10, 40);
+        logArea.setEditable(false);
+        JScrollPane logScrollPane = new JScrollPane(logArea);
+
+        transactionLogPanel.add(logScrollPane, BorderLayout.CENTER);
+
         // Add search panel
         String[] phanCongSearchFields = {
             "MaPC",
@@ -937,7 +948,7 @@ public class XuLyDongThoiUI extends JFrame {
             "MaLich",
             "MaNvtg"
         };
-        JPanel searchPanel = createSearchPanel(phanCongSearchFields, model, "PhanCong", transactionLogArea);
+        JPanel searchPanel = createSearchPanel(phanCongSearchFields, model, "PhanCong", logArea);
 
         // Add listener to table to load data to input fields
         table.getSelectionModel().addListSelectionListener(e -> {
@@ -976,17 +987,6 @@ public class XuLyDongThoiUI extends JFrame {
         dbOperationsPanel.add(deleteDataBtn);
 
         centerPanel.add(dbOperationsPanel, BorderLayout.SOUTH);
-
-        // Transaction Log
-        JPanel transactionLogPanel = new JPanel(new BorderLayout());
-        transactionLogPanel.setBorder(BorderFactory.createTitledBorder("Transaction Log"));
-        transactionLogPanel.setBackground(Color.WHITE);
-
-        JTextArea logArea = new JTextArea(10, 40);
-        logArea.setEditable(false);
-        JScrollPane logScrollPane = new JScrollPane(logArea);
-
-        transactionLogPanel.add(logScrollPane, BorderLayout.CENTER);
 
         // Add components to panel
         topPanel.add(transactionControlPanel, BorderLayout.NORTH);
@@ -1413,12 +1413,23 @@ public class XuLyDongThoiUI extends JFrame {
 
         JTable table = new JTable(model);
 
+        // Transaction Log
+        JPanel transactionLogPanel = new JPanel(new BorderLayout());
+        transactionLogPanel.setBorder(BorderFactory.createTitledBorder("Transaction Log"));
+        transactionLogPanel.setBackground(Color.WHITE);
+
+        JTextArea logArea = new JTextArea(10, 40);
+        logArea.setEditable(false);
+        JScrollPane logScrollPane = new JScrollPane(logArea);
+
+        transactionLogPanel.add(logScrollPane, BorderLayout.CENTER);
+
         // Add search panel
         String[] thongKeSearchFields = {
             "MaNvtg",
             "SoTuyenDaNhan"
         };
-        JPanel searchPanel = createSearchPanel(thongKeSearchFields, model, "ThongKePhanCong", transactionLogArea);
+        JPanel searchPanel = createSearchPanel(thongKeSearchFields, model, "ThongKePhanCong", logArea);
 
         JScrollPane scrollPane = new JScrollPane(table);
         centerPanel.add(scrollPane, BorderLayout.CENTER);
@@ -1431,17 +1442,6 @@ public class XuLyDongThoiUI extends JFrame {
         styleButton(readDataBtn);
         dbOperationsPanel.add(readDataBtn);
         centerPanel.add(dbOperationsPanel, BorderLayout.SOUTH);
-
-        // Transaction Log
-        JPanel transactionLogPanel = new JPanel(new BorderLayout());
-        transactionLogPanel.setBorder(BorderFactory.createTitledBorder("Transaction Log"));
-        transactionLogPanel.setBackground(Color.WHITE);
-
-        JTextArea logArea = new JTextArea(10, 40);
-        logArea.setEditable(false);
-        JScrollPane logScrollPane = new JScrollPane(logArea);
-
-        transactionLogPanel.add(logScrollPane, BorderLayout.CENTER);
 
         // Add components to panel
         topPanel.add(transactionControlPanel, BorderLayout.NORTH);

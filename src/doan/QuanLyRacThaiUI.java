@@ -1097,15 +1097,15 @@ public class QuanLyRacThaiUI extends JFrame {
         JPanel statsPanel = new JPanel(new GridLayout(2, 3, 15, 15));
         statsPanel.setBackground(Color.WHITE);
 
-        int tongChuThai = getCount("SELECT COUNT(*) FROM ChuThai");
-        int tongHopDong = getCount("SELECT COUNT(*) FROM HopDong");
-        double tongDoanhThu = getDoanhThuThangHienTai();
+        // Tạo các card thống kê
+        JPanel chuThaiCard = createStatCard("Tổng số chủ thải", String.valueOf(getCount("SELECT COUNT(*) FROM ChuThai")), new Color(41, 128, 185));
+        JPanel hopDongCard = createStatCard("Tổng số hợp đồng", String.valueOf(getCount("SELECT COUNT(*) FROM HopDong")), new Color(39, 174, 96));
+        JPanel doanhThuCard = createStatCard("Tổng doanh thu tháng", String.format("%,.0f VND", getDoanhThuThangHienTai()), new Color(243, 156, 18));
 
-        // Thêm 3 card vào dòng 1
-        addStatCard(statsPanel, "Tổng số chủ thải", String.valueOf(tongChuThai), new Color(41, 128, 185));
-        addStatCard(statsPanel, "Tổng số hợp đồng", String.valueOf(tongHopDong), new Color(39, 174, 96));
-        addStatCard(statsPanel, "Tổng doanh thu tháng", String.format("%,.2f VND", tongDoanhThu),
-                new Color(243, 156, 18));
+        // Thêm các card vào panel
+        statsPanel.add(chuThaiCard);
+        statsPanel.add(hopDongCard);
+        statsPanel.add(doanhThuCard);
 
         // Thêm 3 panel trống vào dòng 2
         for (int i = 0; i < 3; i++) {
@@ -1115,7 +1115,38 @@ public class QuanLyRacThaiUI extends JFrame {
         }
 
         panel.add(statsPanel, BorderLayout.CENTER);
+
+        // Tạo timer để cập nhật doanh thu mỗi 10 giây
+        Timer timer = new Timer(10000, e -> {
+            // Cập nhật doanh thu
+            double newDoanhThu = getDoanhThuThangHienTai();
+            // Lấy JLabel từ card doanh thu
+            JLabel doanhThuLabel = (JLabel) doanhThuCard.getComponent(1);
+            doanhThuLabel.setText(String.format("%,.0f VND", newDoanhThu));
+        });
+        timer.start();
+
         return panel;
+    }
+
+    private JPanel createStatCard(String title, String value, Color color) {
+        JPanel card = new JPanel(new BorderLayout(10, 5));
+        card.setBackground(color);
+        card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
+        card.setPreferredSize(new Dimension(200, 200)); // Đặt kích thước cố định cho card
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+
+        JLabel valueLabel = new JLabel(value);
+        valueLabel.setForeground(Color.WHITE);
+        valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
+
+        card.add(titleLabel, BorderLayout.NORTH);
+        card.add(valueLabel, BorderLayout.CENTER);
+
+        return card;
     }
 
     private int getCount(String query) {
@@ -1153,25 +1184,6 @@ public class QuanLyRacThaiUI extends JFrame {
             e.printStackTrace();
         }
         return 0.0;
-    }
-
-    private void addStatCard(JPanel parent, String title, String value, Color color) {
-        JPanel card = new JPanel(new BorderLayout(10, 5));
-        card.setBackground(color);
-        card.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
-        card.setPreferredSize(new Dimension(200, 200)); // Đặt kích thước cố định cho card
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setForeground(Color.WHITE);
-        titleLabel.setFont(new Font("Arial", Font.PLAIN, 14));
-
-        JLabel valueLabel = new JLabel(value);
-        valueLabel.setForeground(Color.WHITE);
-        valueLabel.setFont(new Font("Arial", Font.BOLD, 24));
-
-        card.add(titleLabel, BorderLayout.NORTH);
-        card.add(valueLabel, BorderLayout.CENTER);
-        parent.add(card);
     }
 
     private JPanel createNhanVienPanel() {
@@ -4910,7 +4922,7 @@ public class QuanLyRacThaiUI extends JFrame {
                         rs.getString("MaHopDong"),
                         rs.getString("MaDichVu"),
                         rs.getInt("KhoiLuong"),
-                        String.format("%,.2f", rs.getDouble("ThanhTien")),
+                        String.format("%,.0f", rs.getDouble("ThanhTien")),
                         rs.getString("GhiChu")
                     };
                     model.addRow(row);
@@ -4991,7 +5003,7 @@ public class QuanLyRacThaiUI extends JFrame {
                 kl = Math.round(kl * 10.0) / 10.0; // Làm tròn 1 chữ số
                 double tt = kl * donGia;
                 thanhTienField
-                        .setText(String.format("%,.2f", tt).replace(",", "X").replace(".", ",").replace("X", "."));
+                        .setText(String.format("%,.0f", tt).replace(",", "X").replace(".", ",").replace("X", "."));
             } catch (Exception ex) {
                 thanhTienField.setText("");
             }
@@ -5075,7 +5087,7 @@ public class QuanLyRacThaiUI extends JFrame {
                         maDichVu,
                         // diaChiField.getText().trim(),
                         khoiLuong,
-                        String.format("%,.2f", thanhTien).replace(",", "X").replace(".", ",").replace("X", "."),
+                        String.format("%,.0f", thanhTien).replace(",", "X").replace(".", ",").replace("X", "."),
                         ghiChuField.getText().trim()
                     });
 
@@ -5439,7 +5451,7 @@ public class QuanLyRacThaiUI extends JFrame {
                             rs.getInt("MaDichVu"),
                             // rs.getString("DiaChiThuGom"),
                             rs.getInt("KhoiLuong"),
-                            String.format("%,.2f", rs.getDouble("ThanhTien")),
+                            String.format("%,.0f", rs.getDouble("ThanhTien")),
                             rs.getString("GhiChu")
                         });
                     }
@@ -7055,7 +7067,7 @@ public class QuanLyRacThaiUI extends JFrame {
                 formPanel.add(ghiChuField);
 
                 formPanel.add(new JLabel("Trạng thái:"));
-                String[] trangThaiOptions = {"Đã xác nhận", "Chưa xác nhận"};
+                String[] trangThaiOptions = {"Đã chấm công", "Chưa chấm công"};
                 JComboBox<String> trangThaiCombo = new JComboBox<>(trangThaiOptions);
                 trangThaiCombo.setSelectedItem(rs.getString("TrangThai"));
                 formPanel.add(trangThaiCombo);
@@ -7141,7 +7153,7 @@ public class QuanLyRacThaiUI extends JFrame {
         // Panel cho input text
         JPanel valuePanel = new JPanel(new BorderLayout(5, 5));
         JTextField searchField = new JTextField();
-        String[] trangThaiOptions = {"", "Đã xác nhận", "Chưa xác nhận"};
+        String[] trangThaiOptions = {"", "Đã chấm công", "Chưa chấm công"};
         JComboBox<String> trangThaiCombo = new JComboBox<>(trangThaiOptions);
         trangThaiCombo.setPreferredSize(new Dimension(150, 35));
         searchField.setPreferredSize(new Dimension(150, 35));

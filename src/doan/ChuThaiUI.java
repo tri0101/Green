@@ -63,6 +63,7 @@ import java.util.function.Consumer;
 import javax.swing.table.TableColumnModel;
 
 public class ChuThaiUI extends JFrame {
+
     private JPanel sideBar, mainPanel;
     private CardLayout cardLayout;
     private String tenKhachHang;
@@ -74,7 +75,7 @@ public class ChuThaiUI extends JFrame {
     public ChuThaiUI(String tenKhachHang, String maKhachHang) {
         this.tenKhachHang = tenKhachHang;
         this.maKhachHang = maKhachHang;
-        // Set maxWeight based on user type
+        // set khoi luong toi da
         try {
             Connection conn = ConnectionJDBC.getConnection();
             String sql = "SELECT LoaiChuThai FROM ChuThai WHERE MaChuThai = ?";
@@ -83,14 +84,14 @@ public class ChuThaiUI extends JFrame {
             ResultSet rs = pstmt.executeQuery();
             if (rs.next()) {
                 String loaiChuThai = rs.getString("LoaiChuThai");
-                this.maxWeight = "Cá nhân".equals(loaiChuThai) ? 100.0 : 1000.0; // 100kg for individual, 1000kg for business
+                this.maxWeight = "Cá nhân".equals(loaiChuThai) ? 100.0 : 1000.0;
             }
             rs.close();
             pstmt.close();
             conn.close();
         } catch (SQLException e) {
             e.printStackTrace();
-            this.maxWeight = 100.0; // Default to individual limit if error
+            this.maxWeight = 100.0; //set default la 100 neu loi
         }
         initComponents();
     }
@@ -202,9 +203,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách quận: " + e.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách quận: " + e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
         formPanel.add(districtBox);
 
@@ -263,9 +264,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách dịch vụ: " + e.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách dịch vụ: " + e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
 
         // Thêm listener cho combobox quận
@@ -273,14 +274,14 @@ public class ChuThaiUI extends JFrame {
             String selectedDistrict = (String) districtBox.getSelectedItem();
             routeBox.removeAllItems();
             routeBox.addItem("-- Chọn tuyến đường --");
-            
+
             if (selectedDistrict != null && !selectedDistrict.equals("-- Chọn quận --")) {
                 try {
                     Connection conn = ConnectionJDBC.getConnection();
-                    String sql = "SELECT t.TenTuyen FROM TuyenDuongThuGom t " +
-                               "JOIN Quan q ON t.KhuVuc = q.MaQuan " +
-                               "WHERE q.TenQuan = ? " +
-                               "ORDER BY t.TenTuyen";
+                    String sql = "SELECT t.TenTuyen FROM TuyenDuongThuGom t "
+                            + "JOIN Quan q ON t.KhuVuc = q.MaQuan "
+                            + "WHERE q.TenQuan = ? "
+                            + "ORDER BY t.TenTuyen";
                     PreparedStatement pstmt = conn.prepareStatement(sql);
                     pstmt.setString(1, selectedDistrict);
                     ResultSet rs = pstmt.executeQuery();
@@ -296,9 +297,9 @@ public class ChuThaiUI extends JFrame {
                 } catch (SQLException ex) {
                     ex.printStackTrace();
                     JOptionPane.showMessageDialog(this,
-                        "Lỗi khi tải danh sách tuyến đường: " + ex.getMessage(),
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Lỗi khi tải danh sách tuyến đường: " + ex.getMessage(),
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                 }
             } else {
                 routeBox.setEnabled(false);
@@ -317,7 +318,7 @@ public class ChuThaiUI extends JFrame {
         routeBox.addActionListener(e -> {
             String selectedRoute = (String) routeBox.getSelectedItem();
             boolean enableFields = selectedRoute != null && !selectedRoute.equals("-- Chọn tuyến đường --");
-            
+
             // Enable/disable các trường nhập liệu
             dateSpinner.setEnabled(enableFields);
             timeBox.setEnabled(enableFields);
@@ -327,7 +328,7 @@ public class ChuThaiUI extends JFrame {
             durationSpinner.setEnabled(enableFields);
             timeUnitBox.setEnabled(enableFields);
             addressDetailField.setEnabled(enableFields);
-            
+
             if (!enableFields) {
                 // Reset các giá trị
                 weightField.setText("0,0");
@@ -402,7 +403,7 @@ public class ChuThaiUI extends JFrame {
                     return;
                 }
             }
-            
+
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
                 try {
@@ -450,7 +451,7 @@ public class ChuThaiUI extends JFrame {
                     }
                 }
                 weightField.setText(text);
-                
+
                 // Cập nhật thành tiền khi format lại text
                 try {
                     String weightText = text.replace(',', '.');
@@ -476,10 +477,10 @@ public class ChuThaiUI extends JFrame {
                 Date startDate = (Date) dateSpinner.getValue();
                 int duration = (Integer) durationSpinner.getValue();
                 String unit = (String) timeUnitBox.getSelectedItem();
-                
+
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(startDate);
-                
+
                 if ("Năm".equals(unit)) {
                     cal.add(Calendar.YEAR, duration);
                 } else {
@@ -487,7 +488,7 @@ public class ChuThaiUI extends JFrame {
                 }
                 // Trừ đi 1 ngày
                 cal.add(Calendar.DAY_OF_MONTH, -1);
-                
+
                 SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
                 endDateLabel.setText("(Đến ngày: " + sdf.format(cal.getTime()) + ")");
                 endDateLabel.setForeground(new Color(128, 128, 128));
@@ -502,7 +503,7 @@ public class ChuThaiUI extends JFrame {
             String selectedUnit = (String) timeUnitBox.getSelectedItem();
             if ("Năm".equals(selectedUnit)) {
                 durationModel.setMaximum(5);
-                if ((Integer)durationSpinner.getValue() > 5) {
+                if ((Integer) durationSpinner.getValue() > 5) {
                     durationSpinner.setValue(5);
                 }
             } else {
@@ -522,37 +523,37 @@ public class ChuThaiUI extends JFrame {
             String selectedDistrict = (String) districtBox.getSelectedItem();
             String selectedRoute = (String) routeBox.getSelectedItem();
             String addressDetail = addressDetailField.getText().trim();
-            
+
             if (selectedDistrict == null || selectedDistrict.equals("-- Chọn quận --")) {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn quận!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Vui lòng chọn quận!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             if (selectedRoute == null || selectedRoute.equals("-- Chọn tuyến đường --")) {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn tuyến đường!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Vui lòng chọn tuyến đường!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             if (addressDetail.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng nhập địa điểm chi tiết!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Vui lòng nhập địa điểm chi tiết!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             String selectedService = (String) serviceBox.getSelectedItem();
             if (selectedService == null) {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng chọn dịch vụ!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Vui lòng chọn dịch vụ!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -561,27 +562,27 @@ public class ChuThaiUI extends JFrame {
                 String weightText = weightField.getText().trim().replace(',', '.');
                 if (weightText.isEmpty()) {
                     JOptionPane.showMessageDialog(this,
-                        "Vui lòng nhập khối lượng!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Vui lòng nhập khối lượng!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
-                
+
                 double weight = Double.parseDouble(weightText);
                 if (weight < 1) {
                     JOptionPane.showMessageDialog(this,
-                        "Khối lượng phải lớn hơn 1 kg!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Khối lượng phải lớn hơn 1 kg!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 // Kiểm tra giới hạn khối lượng dựa trên loại chủ thải
                 if (weight > maxWeight) {
                     JOptionPane.showMessageDialog(this,
-                        "Khối lượng vượt quá giới hạn cho phép (" + maxWeight + " kg)!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Khối lượng vượt quá giới hạn cho phép (" + maxWeight + " kg)!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -589,10 +590,10 @@ public class ChuThaiUI extends JFrame {
                 Date startDate = (Date) dateSpinner.getValue();
                 int duration = (Integer) durationSpinner.getValue();
                 String unit = (String) timeUnitBox.getSelectedItem();
-                
+
                 Calendar cal = Calendar.getInstance();
                 cal.setTime(startDate);
-                
+
                 if ("Năm".equals(unit)) {
                     cal.add(Calendar.YEAR, duration);
                 } else {
@@ -606,20 +607,20 @@ public class ChuThaiUI extends JFrame {
 
                 // Gọi hàm submit với các thông tin đã validate
                 submitBooking(
-                    startDate,
-                    (String) timeBox.getSelectedItem(),
-                    selectedService,
-                    fullAddress,
-                    weight,
-                    noteField.getText().trim(),
-                    totalLabel.getText(),
-                    endDate
+                        startDate,
+                        (String) timeBox.getSelectedItem(),
+                        selectedService,
+                        fullAddress,
+                        weight,
+                        noteField.getText().trim(),
+                        totalLabel.getText(),
+                        endDate
                 );
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this,
-                    "Khối lượng không hợp lệ!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Khối lượng không hợp lệ!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
         buttonPanel.add(submitButton);
@@ -632,9 +633,9 @@ public class ChuThaiUI extends JFrame {
         return panel;
     }
 
-    private void submitBooking(Date startDate, String time, String service, 
-                             String address, double weight, String note, 
-                             String total, Date endDate) {
+    private void submitBooking(Date startDate, String time, String service,
+            String address, double weight, String note,
+            String total, Date endDate) {
         // Kiểm tra ngày đặt lịch phải sau ngày hiện tại ít nhất 1 ngày
         Calendar today = Calendar.getInstance();
         today.add(Calendar.DAY_OF_MONTH, 1);
@@ -651,10 +652,10 @@ public class ChuThaiUI extends JFrame {
         bookingDate.set(Calendar.MILLISECOND, 0);
 
         if (bookingDate.before(today)) {
-            JOptionPane.showMessageDialog(this, 
-                "Ngày đặt lịch phải sau ngày hiện tại ít nhất 1 ngày!", 
-                "Lỗi", 
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Ngày đặt lịch phải sau ngày hiện tại ít nhất 1 ngày!",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -664,14 +665,14 @@ public class ChuThaiUI extends JFrame {
             conn.setAutoCommit(false);
 
             // Thêm yêu cầu đặt lịch
-            String insertYeuCauSql = "INSERT INTO YeuCauDatLich (MaChuThai, MaLich, ThoiGianYc, GhiChu, TrangThai) " +
-                                   "VALUES (?, NULL, ?, ?, 'Đang xử lý')";
-            
+            String insertYeuCauSql = "INSERT INTO YeuCauDatLich (MaChuThai, MaLich, ThoiGianYc, GhiChu, TrangThai) "
+                    + "VALUES (?, NULL, ?, ?, 'Đang xử lý')";
+
             try (PreparedStatement pstmt = conn.prepareStatement(insertYeuCauSql)) {
                 pstmt.setString(1, maKhachHang);
                 pstmt.setDate(2, new java.sql.Date(new Date().getTime())); // Thời gian hiện tại
                 pstmt.setString(3, note);
-                
+
                 int result = pstmt.executeUpdate();
                 if (result <= 0) {
                     throw new SQLException("Không thể tạo yêu cầu đặt lịch");
@@ -679,9 +680,9 @@ public class ChuThaiUI extends JFrame {
             }
 
             // 1. Create HopDong record
-            String insertHopDongSql = "INSERT INTO HopDong (MaChuThai, LoaiHopDong, NgBatDau, NgKetThuc, DiaChiThuGom, TrangThai) " +
-                                    "VALUES (?, ?, ?, ?, ?, 'Chờ duyệt')";
-            
+            String insertHopDongSql = "INSERT INTO HopDong (MaChuThai, LoaiHopDong, NgBatDau, NgKetThuc, DiaChiThuGom, TrangThai) "
+                    + "VALUES (?, ?, ?, ?, ?, 'Chờ duyệt')";
+
             int maHopDongValue;
             try (PreparedStatement pstmt = conn.prepareStatement(insertHopDongSql, new String[]{"MaHopDong"})) {
                 pstmt.setString(1, maKhachHang);
@@ -691,12 +692,12 @@ public class ChuThaiUI extends JFrame {
                 pstmt.setDate(3, new java.sql.Date(startDate.getTime()));
                 pstmt.setDate(4, new java.sql.Date(endDate.getTime()));
                 pstmt.setString(5, address);
-                
+
                 int result = pstmt.executeUpdate();
                 if (result <= 0) {
                     throw new SQLException("Không thể tạo hợp đồng");
                 }
-                
+
                 ResultSet rs = pstmt.getGeneratedKeys();
                 if (rs.next()) {
                     maHopDongValue = rs.getInt(1);
@@ -720,18 +721,18 @@ public class ChuThaiUI extends JFrame {
             }
 
             // 3. Create ChiTietHopDong record
-            String insertChiTietSql = "INSERT INTO ChiTietHopDong (MaHopDong, MaDichVu, KhoiLuong, ThanhTien, GhiChu) " +
-                                    "VALUES (?, ?, ?, ?, ?)";
+            String insertChiTietSql = "INSERT INTO ChiTietHopDong (MaHopDong, MaDichVu, KhoiLuong, ThanhTien, GhiChu) "
+                    + "VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement pstmt = conn.prepareStatement(insertChiTietSql)) {
                 String totalAmount = total.replaceAll("[^0-9]", "");
                 double totalValue = Double.parseDouble(totalAmount);
-                
+
                 pstmt.setInt(1, maHopDongValue);
                 pstmt.setInt(2, maDichVu);
                 pstmt.setDouble(3, weight);
                 pstmt.setDouble(4, totalValue);
                 pstmt.setString(5, note);
-                
+
                 int result = pstmt.executeUpdate();
                 if (result <= 0) {
                     throw new SQLException("Không thể thêm chi tiết hợp đồng");
@@ -739,10 +740,10 @@ public class ChuThaiUI extends JFrame {
             }
 
             conn.commit();
-            JOptionPane.showMessageDialog(this, 
-                "Đăng ký hợp đồng thành công!", 
-                "Thông báo", 
-                JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this,
+                    "Đăng ký hợp đồng thành công!",
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE);
             clearBookingForm();
 
         } catch (SQLException ex) {
@@ -755,9 +756,9 @@ public class ChuThaiUI extends JFrame {
             }
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tạo hợp đồng: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tạo hợp đồng: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         } finally {
             if (conn != null) {
                 try {
@@ -770,9 +771,7 @@ public class ChuThaiUI extends JFrame {
     }
 
     private void clearBookingForm() {
-        // Reset all form fields to default values
-        // This method will be called after successful booking
-        // Implementation will depend on how you want to handle form reset
+
     }
 
     private JPanel createLichSuPanel() {
@@ -783,18 +782,18 @@ public class ChuThaiUI extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("Lịch sử đặt lịch thu gom");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        
+
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton searchButton = new JButton("Tìm kiếm");
         JButton refreshButton = new JButton("Làm mới");
         JButton deleteButton = new JButton("Xóa");
-        
+
         // Style buttons
         searchButton.setBackground(new Color(46, 64, 83));
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
-        
+
         refreshButton.setBackground(new Color(46, 64, 83));
         refreshButton.setForeground(Color.WHITE);
         refreshButton.setFocusPainted(false);
@@ -803,18 +802,18 @@ public class ChuThaiUI extends JFrame {
         deleteButton.setForeground(Color.WHITE);
         deleteButton.setFocusPainted(false);
         deleteButton.setEnabled(false); // Ban đầu disable nút xóa
-        
+
         buttonPanel.add(searchButton);
         buttonPanel.add(refreshButton);
         buttonPanel.add(deleteButton);
-        
+
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(buttonPanel, BorderLayout.EAST);
 
         // Filter panel
         JPanel filterPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel statusLabel = new JLabel("Trạng thái:");
-        String[] statuses = {"Tất cả", "Đang xử lí", "Đã duyệt", "Từ chối"};
+        String[] statuses = {"Tất cả", "Đang xử lý", "Đã duyệt", "Từ chối"};
         JComboBox<String> statusBox = new JComboBox<>(statuses);
         filterPanel.add(statusLabel);
         filterPanel.add(statusBox);
@@ -843,15 +842,17 @@ public class ChuThaiUI extends JFrame {
         JScrollPane scrollPane = new JScrollPane(table);
 
         // Load initial data
-        loadHistoryData(model, "Tất cả");
+        loadHistoryData(model, "Tất cả", table, deleteButton);
 
         // Add selection listener to enable/disable delete button
         table.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 int selectedRow = table.getSelectedRow();
                 if (selectedRow != -1) {
+                    for (int i = 0; i < table.getColumnCount(); i++) {
+                    }
                     String status = table.getValueAt(selectedRow, 4).toString();
-                    deleteButton.setEnabled("Đang xử lí".equals(status));
+                    deleteButton.setEnabled(status.trim().equalsIgnoreCase("Đang xử lý"));
                 } else {
                     deleteButton.setEnabled(false);
                 }
@@ -861,12 +862,12 @@ public class ChuThaiUI extends JFrame {
         // Add action listeners
         statusBox.addActionListener(e -> {
             String selectedStatus = (String) statusBox.getSelectedItem();
-            loadHistoryData(model, selectedStatus);
+            loadHistoryData(model, selectedStatus, table, deleteButton);
         });
 
         searchButton.addActionListener(e -> showSearchHistoryDialog(model));
-        
-        refreshButton.addActionListener(e -> loadHistoryData(model, (String) statusBox.getSelectedItem()));
+
+        refreshButton.addActionListener(e -> loadHistoryData(model, (String) statusBox.getSelectedItem(), table, deleteButton));
 
         // Add delete button action listener
         deleteButton.addActionListener(e -> {
@@ -874,18 +875,18 @@ public class ChuThaiUI extends JFrame {
             if (selectedRow != -1) {
                 String maYc = table.getValueAt(selectedRow, 0).toString();
                 String status = table.getValueAt(selectedRow, 4).toString();
-                
-                if ("Đang xử lí".equals(status)) {
+
+                if (status.trim().equalsIgnoreCase("Đang xử lý")) {
                     int confirm = JOptionPane.showConfirmDialog(
-                        this,
-                        "Bạn có chắc chắn muốn xóa yêu cầu đặt lịch này không?",
-                        "Xác nhận xóa",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE
+                            this,
+                            "Bạn có chắc chắn muốn xóa yêu cầu đặt lịch này không?\n(Hợp đồng và chi tiết hợp đồng liên quan cũng sẽ bị xóa)",
+                            "Xác nhận xóa",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE
                     );
-                    
+
                     if (confirm == JOptionPane.YES_OPTION) {
-                        deleteBookingRequest(maYc, model, (String) statusBox.getSelectedItem());
+                        deleteBookingRequest(maYc, model, (String) statusBox.getSelectedItem(), table, deleteButton);
                     }
                 }
             }
@@ -898,35 +899,78 @@ public class ChuThaiUI extends JFrame {
     }
 
     // Thêm phương thức xóa yêu cầu đặt lịch
-    private void deleteBookingRequest(String maYc, DefaultTableModel model, String currentFilter) {
+    private void deleteBookingRequest(String maYc, DefaultTableModel model, String currentFilter, JTable table, JButton deleteButton) {
         try {
             Connection conn = ConnectionJDBC.getConnection();
             conn.setAutoCommit(false); // Bắt đầu transaction
-            
+
             try {
-                String sql = "DELETE FROM YeuCauDatLich WHERE MaYc = ? AND TrangThai = 'Đang xử lí'";
+                // Lấy MaChuThai từ yêu cầu đặt lịch
+                String selectSql = "SELECT MaChuThai FROM YeuCauDatLich WHERE MaYc = ?";
+                PreparedStatement selectStmt = conn.prepareStatement(selectSql);
+                selectStmt.setString(1, maYc);
+                ResultSet rs = selectStmt.executeQuery();
+                Integer maChuThai = null;
+                if (rs.next()) {
+                    maChuThai = rs.getInt("MaChuThai");
+                }
+                rs.close();
+                selectStmt.close();
+
+                if (maChuThai != null) {
+                    // Tìm hợp đồng mới nhất của chủ thải này với trạng thái 'Chờ duyệt'
+                    String getHopDongSql = "SELECT MaHopDong FROM HopDong WHERE MaChuThai = ? AND TrangThai = 'Chờ duyệt' ORDER BY NgBatDau DESC FETCH FIRST 1 ROWS ONLY";
+                    PreparedStatement getHopDongStmt = conn.prepareStatement(getHopDongSql);
+                    getHopDongStmt.setInt(1, maChuThai);
+                    ResultSet rsHopDong = getHopDongStmt.executeQuery();
+                    String maHopDong = null;
+                    if (rsHopDong.next()) {
+                        maHopDong = rsHopDong.getString("MaHopDong");
+                    }
+                    rsHopDong.close();
+                    getHopDongStmt.close();
+
+                    if (maHopDong != null) {
+                        // Xóa chi tiết hợp đồng
+                        String deleteChiTietSql = "DELETE FROM ChiTietHopDong WHERE MaHopDong = ?";
+                        PreparedStatement deleteChiTietStmt = conn.prepareStatement(deleteChiTietSql);
+                        deleteChiTietStmt.setString(1, maHopDong);
+                        deleteChiTietStmt.executeUpdate();
+                        deleteChiTietStmt.close();
+
+                        // Xóa hợp đồng
+                        String deleteHopDongSql = "DELETE FROM HopDong WHERE MaHopDong = ?";
+                        PreparedStatement deleteHopDongStmt = conn.prepareStatement(deleteHopDongSql);
+                        deleteHopDongStmt.setString(1, maHopDong);
+                        deleteHopDongStmt.executeUpdate();
+                        deleteHopDongStmt.close();
+                    }
+                }
+
+                // Xóa yêu cầu đặt lịch
+                String sql = "DELETE FROM YeuCauDatLich WHERE MaYc = ? AND TrangThai = 'Đang xử lý'";
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, maYc);
-                
+
                 int rowsAffected = pstmt.executeUpdate();
-                
+
                 if (rowsAffected > 0) {
                     conn.commit();
                     JOptionPane.showMessageDialog(this,
-                        "Xóa yêu cầu đặt lịch thành công!",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    
+                            "Xóa yêu cầu đặt lịch thành công!",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+
                     // Refresh table data
-                    loadHistoryData(model, currentFilter);
+                    loadHistoryData(model, currentFilter, table, deleteButton);
                 } else {
                     conn.rollback();
                     JOptionPane.showMessageDialog(this,
-                        "Không thể xóa yêu cầu đặt lịch!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Không thể xóa yêu cầu đặt lịch!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                 }
-                
+
                 pstmt.close();
             } catch (SQLException ex) {
                 conn.rollback();
@@ -938,21 +982,21 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi xóa yêu cầu đặt lịch: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi xóa yêu cầu đặt lịch: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void loadHistoryData(DefaultTableModel model, String statusFilter) {
+    private void loadHistoryData(DefaultTableModel model, String statusFilter, JTable table, JButton deleteButton) {
         model.setRowCount(0); // Xóa dữ liệu cũ
 
         try {
             Connection conn = ConnectionJDBC.getConnection();
             StringBuilder sql = new StringBuilder(
-                "SELECT yc.MaYc, yc.MaLich, yc.ThoiGianYc, yc.GhiChu, yc.TrangThai " +
-                "FROM YeuCauDatLich yc " +
-                "WHERE yc.MaChuThai = ? "
+                    "SELECT yc.MaYc, yc.MaLich, yc.ThoiGianYc, yc.GhiChu, yc.TrangThai "
+                    + "FROM YeuCauDatLich yc "
+                    + "WHERE yc.MaChuThai = ? "
             );
 
             if (!statusFilter.equals("Tất cả")) {
@@ -960,9 +1004,6 @@ public class ChuThaiUI extends JFrame {
             }
             sql.append("ORDER BY yc.ThoiGianYc DESC");
 
-            System.out.println("SQL Query: " + sql.toString());
-            System.out.println("MaChuThai: " + maKhachHang);
-            System.out.println("Status Filter: " + statusFilter);
 
             PreparedStatement pstmt = conn.prepareStatement(sql.toString());
             pstmt.setString(1, maKhachHang);
@@ -982,9 +1023,6 @@ public class ChuThaiUI extends JFrame {
                 String ghiChu = rs.getString("GhiChu");
                 String trangThai = rs.getString("TrangThai");
 
-                System.out.println("Loading row " + rowCount + ": MaYc=" + maYc + 
-                    ", MaLich=" + maLich + ", ThoiGianYc=" + thoiGianYc + 
-                    ", TrangThai=" + trangThai);
 
                 model.addRow(new Object[]{
                     maYc,
@@ -995,18 +1033,23 @@ public class ChuThaiUI extends JFrame {
                 });
             }
 
-            System.out.println("Total rows loaded: " + rowCount);
 
             rs.close();
             pstmt.close();
             conn.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
-            System.out.println("Error loading data: " + ex.getMessage());
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách yêu cầu: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách yêu cầu: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
+        }
+        // Sau khi load lại dữ liệu, clear selection và disable nút Xóa
+        if (table != null) {
+            table.clearSelection();
+        }
+        if (deleteButton != null) {
+            deleteButton.setEnabled(false);
         }
     }
 
@@ -1041,7 +1084,7 @@ public class ChuThaiUI extends JFrame {
         mainPanel.add(new JLabel("Ngày yêu cầu:"), gbc);
 
         JSpinner dateSpinner = createSearchDateSpinner();
-        JPanel datePanel = (JPanel)dateSpinner.getClientProperty("parent.panel");
+        JPanel datePanel = (JPanel) dateSpinner.getClientProperty("parent.panel");
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1.0;
@@ -1079,23 +1122,23 @@ public class ChuThaiUI extends JFrame {
         searchBtn.addActionListener(evt -> {
             try {
                 String maYc = maYcField.getText().trim();
-                Date ngayYc = dateCheckBox.isSelected() ? 
-                    (Date) ((SpinnerDateModel)dateSpinner.getModel()).getValue() : null;
+                Date ngayYc = dateCheckBox.isSelected()
+                        ? (Date) ((SpinnerDateModel) dateSpinner.getModel()).getValue() : null;
 
                 // Validate input - either ID or date must be provided
                 if (maYc.isEmpty() && !dateCheckBox.isSelected()) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng nhập mã yêu cầu hoặc chọn ngày để tìm kiếm.",
-                        "Thông báo",
-                        JOptionPane.WARNING_MESSAGE);
+                            "Vui lòng nhập mã yêu cầu hoặc chọn ngày để tìm kiếm.",
+                            "Thông báo",
+                            JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 // Tạo câu truy vấn SQL
                 StringBuilder sql = new StringBuilder(
-                    "SELECT MaYc, MaLich, ThoiGianYc, GhiChu, TrangThai " +
-                    "FROM YeuCauDatLich " +
-                    "WHERE MaChuThai = ? ");
+                        "SELECT MaYc, MaLich, ThoiGianYc, GhiChu, TrangThai "
+                        + "FROM YeuCauDatLich "
+                        + "WHERE MaChuThai = ? ");
 
                 if (!maYc.isEmpty()) {
                     sql.append("AND MaYc = ? ");
@@ -1110,7 +1153,7 @@ public class ChuThaiUI extends JFrame {
                 model.setRowCount(0);
                 Connection conn = ConnectionJDBC.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-                
+
                 int paramIndex = 1;
                 pstmt.setString(paramIndex++, maKhachHang);
                 if (!maYc.isEmpty()) {
@@ -1139,19 +1182,19 @@ public class ChuThaiUI extends JFrame {
 
                 if (model.getRowCount() == 0) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Không tìm thấy kết quả nào.",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
+                            "Không tìm thấy kết quả nào.",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                dialog.dispose();
+                    dialog.dispose();
                 }
 
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(dialog,
-                    "Lỗi khi tìm kiếm: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Lỗi khi tìm kiếm: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -1173,18 +1216,18 @@ public class ChuThaiUI extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("Phản ánh dịch vụ");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        
+
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton searchButton = new JButton("Tìm kiếm");
         JButton refreshButton = new JButton("Làm mới");
         JButton deleteButton = new JButton("Xóa");
-        
+
         // Style buttons
         searchButton.setBackground(new Color(46, 64, 83));
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
-        
+
         refreshButton.setBackground(new Color(46, 64, 83));
         refreshButton.setForeground(Color.WHITE);
         refreshButton.setFocusPainted(false);
@@ -1193,11 +1236,11 @@ public class ChuThaiUI extends JFrame {
         deleteButton.setForeground(Color.WHITE);
         deleteButton.setFocusPainted(false);
         deleteButton.setEnabled(false); // Ban đầu disable nút xóa
-        
+
         buttonPanel.add(searchButton);
         buttonPanel.add(refreshButton);
         buttonPanel.add(deleteButton);
-        
+
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(buttonPanel, BorderLayout.EAST);
 
@@ -1228,10 +1271,10 @@ public class ChuThaiUI extends JFrame {
             }
         };
         JTable table = new JTable(model);
-        
+
         // Set custom renderer for content column to support word wrap
         table.getColumnModel().getColumn(1).setCellRenderer(new MultiLineTableCellRenderer());
-        
+
         // Set column widths
         table.getColumnModel().getColumn(0).setPreferredWidth(100);  // Mã phản ánh
         table.getColumnModel().getColumn(1).setPreferredWidth(400);  // Nội dung
@@ -1256,7 +1299,7 @@ public class ChuThaiUI extends JFrame {
         // Add feedback form panel
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setBorder(BorderFactory.createTitledBorder("Thêm phản ánh mới"));
-        
+
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -1267,7 +1310,7 @@ public class ChuThaiUI extends JFrame {
         contentArea.setLineWrap(true);
         contentArea.setWrapStyleWord(true);
         JScrollPane contentScroll = new JScrollPane(contentArea);
-        
+
         formPanel.add(new JLabel("Nội dung:"), gbc);
         gbc.gridx = 1;
         formPanel.add(contentScroll, gbc);
@@ -1276,7 +1319,7 @@ public class ChuThaiUI extends JFrame {
         submitButton.setBackground(new Color(46, 204, 113));
         submitButton.setForeground(Color.WHITE);
         submitButton.setFocusPainted(false);
-        
+
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.anchor = GridBagConstraints.EAST;
@@ -1294,9 +1337,9 @@ public class ChuThaiUI extends JFrame {
                 loadFeedbackHistory(model);
             } else {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng nhập nội dung phản ánh!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Vui lòng nhập nội dung phản ánh!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -1313,16 +1356,16 @@ public class ChuThaiUI extends JFrame {
             if (selectedRow != -1) {
                 String maPa = table.getValueAt(selectedRow, 0).toString();
                 String status = table.getValueAt(selectedRow, 3).toString();
-                
+
                 if ("Đang xử lý".equals(status)) {
                     int confirm = JOptionPane.showConfirmDialog(
-                        this,
-                        "Bạn có chắc chắn muốn xóa phản ánh này không?",
-                        "Xác nhận xóa",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE
+                            this,
+                            "Bạn có chắc chắn muốn xóa phản ánh này không?",
+                            "Xác nhận xóa",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE
                     );
-                    
+
                     if (confirm == JOptionPane.YES_OPTION) {
                         deleteFeedback(maPa, model, statusBox.getSelectedItem().toString());
                     }
@@ -1346,31 +1389,31 @@ public class ChuThaiUI extends JFrame {
         try {
             Connection conn = ConnectionJDBC.getConnection();
             conn.setAutoCommit(false);
-            
+
             try {
                 String sql = "DELETE FROM PhanAnh WHERE MaPA = ? AND TrangThai = 'Đang xử lý'";
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, maPa);
-                
+
                 int rowsAffected = pstmt.executeUpdate();
-                
+
                 if (rowsAffected > 0) {
                     conn.commit();
                     JOptionPane.showMessageDialog(this,
-                        "Xóa phản ánh thành công!",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    
+                            "Xóa phản ánh thành công!",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+
                     // Refresh table data
                     loadFeedbackHistory(model, currentFilter);
                 } else {
                     conn.rollback();
                     JOptionPane.showMessageDialog(this,
-                        "Không thể xóa phản ánh!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Không thể xóa phản ánh!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                 }
-                
+
                 pstmt.close();
             } catch (SQLException ex) {
                 conn.rollback();
@@ -1382,9 +1425,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi xóa phản ánh: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi xóa phản ánh: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1401,15 +1444,15 @@ public class ChuThaiUI extends JFrame {
             conn.close();
 
             JOptionPane.showMessageDialog(this,
-                "Gửi phản ánh thành công!",
-                "Thông báo",
-                JOptionPane.INFORMATION_MESSAGE);
+                    "Gửi phản ánh thành công!",
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE);
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi gửi phản ánh: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi gửi phản ánh: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1423,9 +1466,9 @@ public class ChuThaiUI extends JFrame {
         try {
             Connection conn = ConnectionJDBC.getConnection();
             StringBuilder sql = new StringBuilder(
-                "SELECT MaPA, NoiDung, ThoiGianGui, TrangThai " +
-                "FROM PhanAnh " +
-                "WHERE MaChuThai = ? "
+                    "SELECT MaPA, NoiDung, ThoiGianGui, TrangThai "
+                    + "FROM PhanAnh "
+                    + "WHERE MaChuThai = ? "
             );
 
             if (!status.equals("Tất cả")) {
@@ -1457,14 +1500,15 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải lịch sử phản ánh: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải lịch sử phản ánh: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     // Custom renderer for multi-line table cells
     private class MultiLineTableCellRenderer extends JTextArea implements TableCellRenderer {
+
         public MultiLineTableCellRenderer() {
             setLineWrap(true);
             setWrapStyleWord(true);
@@ -1521,7 +1565,7 @@ public class ChuThaiUI extends JFrame {
         mainPanel.add(new JLabel("Ngày gửi:"), gbc);
 
         JSpinner dateSpinner = createSearchDateSpinner();
-        JPanel datePanel = (JPanel)dateSpinner.getClientProperty("parent.panel");
+        JPanel datePanel = (JPanel) dateSpinner.getClientProperty("parent.panel");
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1.0;
@@ -1559,21 +1603,21 @@ public class ChuThaiUI extends JFrame {
         searchBtn.addActionListener(evt -> {
             try {
                 String maPa = maPaField.getText().trim();
-                Date ngayGui = dateCheckBox.isSelected() ? 
-                    (Date) ((SpinnerDateModel)dateSpinner.getModel()).getValue() : null;
+                Date ngayGui = dateCheckBox.isSelected()
+                        ? (Date) ((SpinnerDateModel) dateSpinner.getModel()).getValue() : null;
 
                 // Validate input - either ID or date must be provided
                 if (maPa.isEmpty() && !dateCheckBox.isSelected()) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng nhập mã phản ánh hoặc chọn ngày để tìm kiếm.",
-                        "Thông báo",
-                        JOptionPane.WARNING_MESSAGE);
+                            "Vui lòng nhập mã phản ánh hoặc chọn ngày để tìm kiếm.",
+                            "Thông báo",
+                            JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 StringBuilder sql = new StringBuilder(
-                    "SELECT MaPA, NoiDung, ThoiGianGui, TrangThai " +
-                    "FROM PhanAnh WHERE MaChuThai = ? ");
+                        "SELECT MaPA, NoiDung, ThoiGianGui, TrangThai "
+                        + "FROM PhanAnh WHERE MaChuThai = ? ");
 
                 List<Object> params = new ArrayList<>();
                 List<Integer> types = new ArrayList<>();
@@ -1598,7 +1642,7 @@ public class ChuThaiUI extends JFrame {
                 model.setRowCount(0);
                 Connection conn = ConnectionJDBC.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-                
+
                 for (int i = 0; i < params.size(); i++) {
                     pstmt.setObject(i + 1, params.get(i), types.get(i));
                 }
@@ -1621,19 +1665,19 @@ public class ChuThaiUI extends JFrame {
 
                 if (model.getRowCount() == 0) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Không tìm thấy kết quả nào.",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
+                            "Không tìm thấy kết quả nào.",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                dialog.dispose();
+                    dialog.dispose();
                 }
 
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(dialog,
-                    "Lỗi khi tìm kiếm: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Lỗi khi tìm kiếm: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -1700,9 +1744,9 @@ public class ChuThaiUI extends JFrame {
             conn.close();
 
             JOptionPane.showMessageDialog(this,
-                "Cập nhật trạng thái thanh toán thành công!",
-                "Thông báo",
-                JOptionPane.INFORMATION_MESSAGE);
+                    "Cập nhật trạng thái thanh toán thành công!",
+                    "Thông báo",
+                    JOptionPane.INFORMATION_MESSAGE);
 
             // Refresh bảng hóa đơn
             DefaultTableModel model = (DefaultTableModel) invoiceTable.getModel();
@@ -1710,9 +1754,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi cập nhật trạng thái thanh toán: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi cập nhật trạng thái thanh toán: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1747,7 +1791,7 @@ public class ChuThaiUI extends JFrame {
         mainPanel.add(new JLabel("Ngày lập:"), gbc);
 
         JSpinner dateSpinner = createSearchDateSpinner();
-        JPanel datePanel = (JPanel)dateSpinner.getClientProperty("parent.panel");
+        JPanel datePanel = (JPanel) dateSpinner.getClientProperty("parent.panel");
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1.0;
@@ -1785,25 +1829,25 @@ public class ChuThaiUI extends JFrame {
         searchBtn.addActionListener(evt -> {
             try {
                 String maHd = maHdField.getText().trim();
-                Date ngayLap = dateCheckBox.isSelected() ? 
-                    (Date) ((SpinnerDateModel)dateSpinner.getModel()).getValue() : null;
+                Date ngayLap = dateCheckBox.isSelected()
+                        ? (Date) ((SpinnerDateModel) dateSpinner.getModel()).getValue() : null;
 
                 // Validate input - either ID or date must be provided
                 if (maHd.isEmpty() && !dateCheckBox.isSelected()) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng nhập mã hóa đơn hoặc chọn ngày để tìm kiếm.",
-                        "Thông báo",
-                        JOptionPane.WARNING_MESSAGE);
+                            "Vui lòng nhập mã hóa đơn hoặc chọn ngày để tìm kiếm.",
+                            "Thông báo",
+                            JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 StringBuilder sql = new StringBuilder(
-                    "SELECT hd.MaHoaDon, hd.MaHopDong, hd.NgLap, hd.SoTien, " +
-                    "nvdp.TenNvdp, hd.TinhTrang " +
-                    "FROM HoaDon hd " +
-                    "JOIN HopDong h ON hd.MaHopDong = h.MaHopDong " +
-                    "JOIN NhanVienDieuPhoi nvdp ON hd.MaNvdp = nvdp.MaNvdp " +
-                    "WHERE h.MaChuThai = ? ");
+                        "SELECT hd.MaHoaDon, hd.MaHopDong, hd.NgLap, hd.SoTien, "
+                        + "nvdp.TenNvdp, hd.TinhTrang "
+                        + "FROM HoaDon hd "
+                        + "JOIN HopDong h ON hd.MaHopDong = h.MaHopDong "
+                        + "JOIN NhanVienDieuPhoi nvdp ON hd.MaNvdp = nvdp.MaNvdp "
+                        + "WHERE h.MaChuThai = ? ");
 
                 List<Object> params = new ArrayList<>();
                 List<Integer> types = new ArrayList<>();
@@ -1828,7 +1872,7 @@ public class ChuThaiUI extends JFrame {
                 model.setRowCount(0);
                 Connection conn = ConnectionJDBC.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-                
+
                 for (int i = 0; i < params.size(); i++) {
                     pstmt.setObject(i + 1, params.get(i), types.get(i));
                 }
@@ -1853,19 +1897,19 @@ public class ChuThaiUI extends JFrame {
 
                 if (model.getRowCount() == 0) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Không tìm thấy kết quả nào.",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
+                            "Không tìm thấy kết quả nào.",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                dialog.dispose();
+                    dialog.dispose();
                 }
 
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(dialog,
-                    "Lỗi khi tìm kiếm: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Lỗi khi tìm kiếm: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -1885,12 +1929,12 @@ public class ChuThaiUI extends JFrame {
         try {
             Connection conn = ConnectionJDBC.getConnection();
             StringBuilder sql = new StringBuilder(
-                "SELECT hd.MaHoaDon, hd.MaHopDong, hd.NgLap, hd.SoTien, hd.TinhTrang, " +
-                "nvdp.TenNvdp " +
-                "FROM HoaDon hd " +
-                "JOIN HopDong h ON hd.MaHopDong = h.MaHopDong " +
-                "JOIN NhanVienDieuPhoi nvdp ON hd.MaNvdp = nvdp.MaNvdp " +
-                "WHERE h.MaChuThai = ? "
+                    "SELECT hd.MaHoaDon, hd.MaHopDong, hd.NgLap, hd.SoTien, hd.TinhTrang, "
+                    + "nvdp.TenNvdp "
+                    + "FROM HoaDon hd "
+                    + "JOIN HopDong h ON hd.MaHopDong = h.MaHopDong "
+                    + "JOIN NhanVienDieuPhoi nvdp ON hd.MaNvdp = nvdp.MaNvdp "
+                    + "WHERE h.MaChuThai = ? "
             );
 
             if (!status.equals("Tất cả")) {
@@ -1924,9 +1968,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách hóa đơn: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách hóa đơn: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1938,7 +1982,7 @@ public class ChuThaiUI extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("Quản lý hợp đồng");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        
+
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton searchButton = new JButton("Tìm kiếm");
@@ -1946,12 +1990,12 @@ public class ChuThaiUI extends JFrame {
         JButton addDetailButton = new JButton("Thêm chi tiết");
         JButton editContractButton = new JButton("Sửa hợp đồng");
         JButton deleteButton = new JButton("Xóa hợp đồng");
-        
+
         // Style buttons
         searchButton.setBackground(new Color(46, 64, 83));
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
-        
+
         refreshButton.setBackground(new Color(46, 64, 83));
         refreshButton.setForeground(Color.WHITE);
         refreshButton.setFocusPainted(false);
@@ -1970,13 +2014,13 @@ public class ChuThaiUI extends JFrame {
         deleteButton.setForeground(Color.WHITE);
         deleteButton.setFocusPainted(false);
         deleteButton.setEnabled(false);
-        
+
         buttonPanel.add(searchButton);
         buttonPanel.add(refreshButton);
         buttonPanel.add(addDetailButton);
         buttonPanel.add(editContractButton);
         buttonPanel.add(deleteButton);
-        
+
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(buttonPanel, BorderLayout.EAST);
 
@@ -2031,12 +2075,12 @@ public class ChuThaiUI extends JFrame {
         editDetailButton.setForeground(Color.WHITE);
         editDetailButton.setFocusPainted(false);
         editDetailButton.setEnabled(false);
-        
+
         deleteDetailButton.setBackground(new Color(231, 76, 60)); // Style delete button
         deleteDetailButton.setForeground(Color.WHITE);
         deleteDetailButton.setFocusPainted(false);
         deleteDetailButton.setEnabled(false);
-        
+
         detailButtonPanel.add(editDetailButton);
         detailButtonPanel.add(deleteDetailButton);
 
@@ -2078,13 +2122,13 @@ public class ChuThaiUI extends JFrame {
                     String maHopDong = contractTable.getValueAt(row, 0).toString();
                     String trangThai = contractTable.getValueAt(row, 6).toString();
                     loadContractDetails(maHopDong, detailModel);
-                    
+
                     // Chỉ enable các nút nếu hợp đồng đang ở trạng thái "Chờ duyệt"
                     boolean isChoDuyet = "Chờ duyệt".equals(trangThai);
                     addDetailButton.setEnabled(isChoDuyet);
                     editContractButton.setEnabled(isChoDuyet);
                     deleteButton.setEnabled(isChoDuyet);
-                    
+
                     // Disable nút sửa chi tiết khi không có dòng nào được chọn
                     editDetailButton.setEnabled(false);
                 } else {
@@ -2101,7 +2145,7 @@ public class ChuThaiUI extends JFrame {
             if (!e.getValueIsAdjusting()) {
                 int contractRow = contractTable.getSelectedRow();
                 int detailRow = detailTable.getSelectedRow();
-                
+
                 if (contractRow >= 0 && detailRow >= 0) {
                     String trangThai = contractTable.getValueAt(contractRow, 6).toString();
                     boolean isChoDuyet = "Chờ duyệt".equals(trangThai);
@@ -2118,14 +2162,14 @@ public class ChuThaiUI extends JFrame {
         searchButton.addActionListener(e -> showSearchContractDialog(contractModel));
         refreshButton.addActionListener(e -> loadContractData(contractModel, statusBox.getSelectedItem().toString()));
         statusBox.addActionListener(e -> loadContractData(contractModel, statusBox.getSelectedItem().toString()));
-        
+
         // Add action listener for add detail button
         addDetailButton.addActionListener(e -> {
             int selectedRow = contractTable.getSelectedRow();
             if (selectedRow >= 0) {
                 String maHopDong = contractTable.getValueAt(selectedRow, 0).toString();
                 String trangThai = contractTable.getValueAt(selectedRow, 6).toString();
-                
+
                 if ("Chờ duyệt".equals(trangThai)) {
                     showAddContractDetailDialog(maHopDong, detailModel);
                 }
@@ -2138,7 +2182,7 @@ public class ChuThaiUI extends JFrame {
             if (selectedRow >= 0) {
                 String maHopDong = contractTable.getValueAt(selectedRow, 0).toString();
                 String trangThai = contractTable.getValueAt(selectedRow, 6).toString();
-                
+
                 if ("Chờ duyệt".equals(trangThai)) {
                     showEditContractDialog(maHopDong, contractModel);
                 }
@@ -2149,18 +2193,18 @@ public class ChuThaiUI extends JFrame {
         editDetailButton.addActionListener(e -> {
             int contractRow = contractTable.getSelectedRow();
             int detailRow = detailTable.getSelectedRow();
-            
+
             if (contractRow >= 0 && detailRow >= 0) {
                 String maHopDong = contractTable.getValueAt(contractRow, 0).toString();
                 String trangThai = contractTable.getValueAt(contractRow, 6).toString();
-                
+
                 if ("Chờ duyệt".equals(trangThai)) {
                     // Lấy thông tin chi tiết hợp đồng được chọn
                     String dichVu = detailTable.getValueAt(detailRow, 0).toString();
                     String khoiLuongStr = detailTable.getValueAt(detailRow, 2).toString().replace(",", "");
                     double khoiLuong = Double.parseDouble(khoiLuongStr);
                     String ghiChu = detailTable.getValueAt(detailRow, 5).toString();
-                    
+
                     showEditDetailDialog(maHopDong, dichVu, khoiLuong, ghiChu, detailModel);
                 }
             }
@@ -2172,16 +2216,16 @@ public class ChuThaiUI extends JFrame {
             if (selectedRow >= 0) {
                 String maHopDong = contractTable.getValueAt(selectedRow, 0).toString();
                 String trangThai = contractTable.getValueAt(selectedRow, 6).toString();
-                
+
                 if ("Chờ duyệt".equals(trangThai)) {
                     int confirm = JOptionPane.showConfirmDialog(
-                        this,
-                        "Bạn có chắc chắn muốn xóa hợp đồng này và tất cả chi tiết của nó không?",
-                        "Xác nhận xóa",
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.WARNING_MESSAGE
+                            this,
+                            "Bạn có chắc chắn muốn xóa hợp đồng này và tất cả chi tiết của nó không?",
+                            "Xác nhận xóa",
+                            JOptionPane.YES_NO_OPTION,
+                            JOptionPane.WARNING_MESSAGE
                     );
-                    
+
                     if (confirm == JOptionPane.YES_OPTION) {
                         deleteContract(maHopDong, contractModel, detailModel);
                     }
@@ -2193,22 +2237,22 @@ public class ChuThaiUI extends JFrame {
         deleteDetailButton.addActionListener(e -> {
             int contractRow = contractTable.getSelectedRow();
             int detailRow = detailTable.getSelectedRow();
-            
+
             if (contractRow >= 0 && detailRow >= 0) {
                 String maHopDong = contractTable.getValueAt(contractRow, 0).toString();
                 String trangThai = contractTable.getValueAt(contractRow, 6).toString();
                 String dichVu = detailTable.getValueAt(detailRow, 0).toString();
-                
+
                 if ("Chờ duyệt".equals(trangThai)) {
                     // Check if this is the only detail
                     if (detailTable.getRowCount() <= 1) {
                         JOptionPane.showMessageDialog(this,
-                            "Không thể xóa chi tiết hợp đồng cuối cùng. Hợp đồng phải có ít nhất một chi tiết.",
-                            "Cảnh báo",
-                            JOptionPane.WARNING_MESSAGE);
+                                "Không thể xóa chi tiết hợp đồng cuối cùng. Hợp đồng phải có ít nhất một chi tiết.",
+                                "Cảnh báo",
+                                JOptionPane.WARNING_MESSAGE);
                         return;
                     }
-                    
+
                     // Get MaDichVu from the service name
                     try {
                         Connection conn = ConnectionJDBC.getConnection();
@@ -2216,18 +2260,18 @@ public class ChuThaiUI extends JFrame {
                         PreparedStatement pstmt = conn.prepareStatement(sql);
                         pstmt.setString(1, dichVu);
                         ResultSet rs = pstmt.executeQuery();
-                        
+
                         if (rs.next()) {
                             String maDichVu = rs.getString("MaDichVu");
                             deleteContractDetail(maHopDong, maDichVu, detailModel);
                         }
-                        
+
                         conn.close();
                     } catch (SQLException ex) {
                         JOptionPane.showMessageDialog(this,
-                            "Lỗi khi xóa chi tiết hợp đồng: " + ex.getMessage(),
-                            "Lỗi",
-                            JOptionPane.ERROR_MESSAGE);
+                                "Lỗi khi xóa chi tiết hợp đồng: " + ex.getMessage(),
+                                "Lỗi",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -2244,28 +2288,67 @@ public class ChuThaiUI extends JFrame {
         try {
             Connection conn = ConnectionJDBC.getConnection();
             conn.setAutoCommit(false);
-            
+
             try {
+                // Lấy MaChuThai và NgBatDau của hợp đồng
+                String getInfoSql = "SELECT MaChuThai, NgBatDau FROM HopDong WHERE MaHopDong = ?";
+                PreparedStatement getInfoStmt = conn.prepareStatement(getInfoSql);
+                getInfoStmt.setString(1, maHopDong);
+                ResultSet rsInfo = getInfoStmt.executeQuery();
+                Integer maChuThai = null;
+                java.sql.Date ngBatDau = null;
+                if (rsInfo.next()) {
+                    maChuThai = rsInfo.getInt("MaChuThai");
+                    ngBatDau = rsInfo.getDate("NgBatDau");
+                }
+                rsInfo.close();
+                getInfoStmt.close();
+
                 // Xóa chi tiết hợp đồng trước
                 String deleteDetailsSql = "DELETE FROM ChiTietHopDong WHERE MaHopDong = ?";
                 PreparedStatement deleteDetailsStmt = conn.prepareStatement(deleteDetailsSql);
                 deleteDetailsStmt.setString(1, maHopDong);
                 deleteDetailsStmt.executeUpdate();
-                
+
                 // Sau đó xóa hợp đồng
                 String deleteContractSql = "DELETE FROM HopDong WHERE MaHopDong = ? AND TrangThai = 'Chờ duyệt'";
                 PreparedStatement deleteContractStmt = conn.prepareStatement(deleteContractSql);
                 deleteContractStmt.setString(1, maHopDong);
-                
                 int result = deleteContractStmt.executeUpdate();
-                
+
+                // Xóa yêu cầu đặt lịch đúng bản ghi phù hợp nhất (gần nhất về thời gian, nhỏ hơn hoặc bằng NgBatDau)
+                Integer maYc = null;
+                if (maChuThai != null && ngBatDau != null) {
+                    String findYcSql = "SELECT MaYc FROM YeuCauDatLich WHERE MaChuThai = ? AND ThoiGianYc <= ? ORDER BY ThoiGianYc DESC FETCH FIRST 1 ROWS ONLY";
+                    PreparedStatement findYcStmt = conn.prepareStatement(findYcSql);
+                    findYcStmt.setInt(1, maChuThai);
+                    findYcStmt.setDate(2, ngBatDau);
+                    ResultSet rsYc = findYcStmt.executeQuery();
+                    if (rsYc.next()) {
+                        maYc = rsYc.getInt("MaYc");
+                    }
+                    rsYc.close();
+                    findYcStmt.close();
+                }
+
+                if (maYc != null) {
+                    String deleteYcSql = "DELETE FROM YeuCauDatLich WHERE MaYc = ?";
+                    PreparedStatement deleteYcStmt = conn.prepareStatement(deleteYcSql);
+                    deleteYcStmt.setInt(1, maYc);
+                    deleteYcStmt.executeUpdate();
+                    deleteYcStmt.close();
+                }
+
+                deleteDetailsStmt.close();
+                deleteContractStmt.close();
+
                 if (result > 0) {
                     conn.commit();
                     JOptionPane.showMessageDialog(this,
-                        "Xóa hợp đồng thành công!",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    
+                            "Xóa hợp đồng thành công!",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+
                     // Refresh both tables
                     loadContractData(contractModel, "Tất cả");
                     detailModel.setRowCount(0); // Clear detail table
@@ -2282,9 +2365,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi xóa hợp đồng: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi xóa hợp đồng: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -2362,7 +2445,7 @@ public class ChuThaiUI extends JFrame {
                     return;
                 }
             }
-            
+
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
                 calculateTotal(serviceBox, weightField, totalLabel);
@@ -2385,49 +2468,49 @@ public class ChuThaiUI extends JFrame {
         saveButton.addActionListener(e -> {
             try {
                 // Validate input
-                if (serviceBox.getSelectedItem() == null || 
-                    serviceBox.getSelectedItem().toString().equals("-- Chọn dịch vụ --")) {
+                if (serviceBox.getSelectedItem() == null
+                        || serviceBox.getSelectedItem().toString().equals("-- Chọn dịch vụ --")) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng chọn dịch vụ!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Vui lòng chọn dịch vụ!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 String weightText = weightField.getText().trim().replace(',', '.');
                 if (weightText.isEmpty()) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng nhập khối lượng!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Vui lòng nhập khối lượng!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 double weight = Double.parseDouble(weightText);
                 if (weight <= 0) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Khối lượng phải lớn hơn 0!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Khối lượng phải lớn hơn 0!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 addContractDetail(
-                    maHopDong,
-                    null, // district is no longer needed
-                    null, // route is no longer needed
-                    serviceBox.getSelectedItem().toString(),
-                    weightField.getText(),
-                    totalLabel.getText(),
-                    noteField.getText(),
-                    detailModel
+                        maHopDong,
+                        null, // district is no longer needed
+                        null, // route is no longer needed
+                        serviceBox.getSelectedItem().toString(),
+                        weightField.getText(),
+                        totalLabel.getText(),
+                        noteField.getText(),
+                        detailModel
                 );
                 dialog.dispose();
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(dialog,
-                    "Khối lượng không hợp lệ!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Khối lượng không hợp lệ!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -2447,102 +2530,101 @@ public class ChuThaiUI extends JFrame {
             String sql = "SELECT TenQuan FROM Quan ORDER BY TenQuan";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             ResultSet rs = pstmt.executeQuery();
-            
+
             while (rs.next()) {
                 districtBox.addItem(rs.getString("TenQuan"));
             }
-            
+
             rs.close();
             pstmt.close();
             conn.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách quận: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách quận: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void loadRoutes(JComboBox<String> routeBox, String district) {
         try {
             Connection conn = ConnectionJDBC.getConnection();
-            String sql = "SELECT t.TenTuyen FROM TuyenDuongThuGom t " +
-                        "JOIN Quan q ON t.KhuVuc = q.MaQuan " +
-                        "WHERE q.TenQuan = ? " +
-                        "ORDER BY t.TenTuyen";
+            String sql = "SELECT t.TenTuyen FROM TuyenDuongThuGom t "
+                    + "JOIN Quan q ON t.KhuVuc = q.MaQuan "
+                    + "WHERE q.TenQuan = ? "
+                    + "ORDER BY t.TenTuyen";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, district);
             ResultSet rs = pstmt.executeQuery();
-            
+
             while (rs.next()) {
                 routeBox.addItem(rs.getString("TenTuyen"));
             }
-            
+
             rs.close();
             pstmt.close();
             conn.close();
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách tuyến đường: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách tuyến đường: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void loadServices(JComboBox<String> serviceBox) {
         serviceBox.removeAllItems();
-        
-        try (Connection conn = ConnectionJDBC.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(
-                 "SELECT TenDichVu, DonViTinh, DonGia FROM DichVu ORDER BY TenDichVu")) {
-            
+
+        try (Connection conn = ConnectionJDBC.getConnection(); PreparedStatement pstmt = conn.prepareStatement(
+                "SELECT TenDichVu, DonViTinh, DonGia FROM DichVu ORDER BY TenDichVu")) {
+
             ResultSet rs = pstmt.executeQuery();
             while (rs.next()) {
                 String service = String.format("%s - %s - %,d VNĐ/%s",
-                    rs.getString("TenDichVu"),
-                    rs.getString("DonViTinh"),
-                    rs.getLong("DonGia"),
-                    rs.getString("DonViTinh"));
+                        rs.getString("TenDichVu"),
+                        rs.getString("DonViTinh"),
+                        rs.getLong("DonGia"),
+                        rs.getString("DonViTinh"));
                 serviceBox.addItem(service);
             }
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách dịch vụ: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách dịch vụ: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private boolean validateContractDetailInput(JComboBox<String> districtBox, 
-                                              JComboBox<String> routeBox,
-                                              JComboBox<String> serviceBox,
-                                              JTextField weightField) {
-        if (districtBox.getSelectedItem() == null || 
-            districtBox.getSelectedItem().toString().equals("-- Chọn quận --")) {
+    private boolean validateContractDetailInput(JComboBox<String> districtBox,
+            JComboBox<String> routeBox,
+            JComboBox<String> serviceBox,
+            JTextField weightField) {
+        if (districtBox.getSelectedItem() == null
+                || districtBox.getSelectedItem().toString().equals("-- Chọn quận --")) {
             JOptionPane.showMessageDialog(this,
-                "Vui lòng chọn quận!",
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Vui lòng chọn quận!",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
-        if (routeBox.getSelectedItem() == null || 
-            routeBox.getSelectedItem().toString().equals("-- Chọn tuyến đường --")) {
+        if (routeBox.getSelectedItem() == null
+                || routeBox.getSelectedItem().toString().equals("-- Chọn tuyến đường --")) {
             JOptionPane.showMessageDialog(this,
-                "Vui lòng chọn tuyến đường!",
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Vui lòng chọn tuyến đường!",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
         if (serviceBox.getSelectedItem() == null) {
             JOptionPane.showMessageDialog(this,
-                "Vui lòng chọn dịch vụ!",
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Vui lòng chọn dịch vụ!",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
@@ -2550,75 +2632,75 @@ public class ChuThaiUI extends JFrame {
             String weightText = weightField.getText().trim().replace(',', '.');
             if (weightText.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng nhập khối lượng!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Vui lòng nhập khối lượng!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return false;
             }
-            
+
             double weight = Double.parseDouble(weightText);
             if (weight <= 0) {
                 JOptionPane.showMessageDialog(this,
-                    "Khối lượng phải lớn hơn 0!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Khối lượng phải lớn hơn 0!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return false;
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this,
-                "Khối lượng không hợp lệ!",
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Khối lượng không hợp lệ!",
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
             return false;
         }
 
         return true;
     }
 
-    private void addContractDetail(String maHopDong, 
-                                 String district,
-                                 String route,
-                                 String service,
-                                 String weight,
-                                 String total,
-                                 String note,
-                                 DefaultTableModel detailModel) {
+    private void addContractDetail(String maHopDong,
+            String district,
+            String route,
+            String service,
+            String weight,
+            String total,
+            String note,
+            DefaultTableModel detailModel) {
         try {
             Connection conn = ConnectionJDBC.getConnection();
             conn.setAutoCommit(false);
 
             try {
                 String serviceName = service.split(" - ")[0];
-                
+
                 // Get MaDichVu
                 String findServiceSql = "SELECT MaDichVu FROM DichVu WHERE TenDichVu = ?";
                 PreparedStatement findServiceStmt = conn.prepareStatement(findServiceSql);
                 findServiceStmt.setString(1, serviceName);
                 ResultSet rs = findServiceStmt.executeQuery();
-                
+
                 if (rs.next()) {
                     int maDichVu = rs.getInt("MaDichVu");
-                    
+
                     // Insert chi tiết hợp đồng
-                    String insertSql = "INSERT INTO ChiTietHopDong (MaHopDong, MaDichVu, KhoiLuong, ThanhTien, GhiChu) " +
-                                     "VALUES (?, ?, ?, ?, ?)";
+                    String insertSql = "INSERT INTO ChiTietHopDong (MaHopDong, MaDichVu, KhoiLuong, ThanhTien, GhiChu) "
+                            + "VALUES (?, ?, ?, ?, ?)";
                     PreparedStatement pstmt = conn.prepareStatement(insertSql);
-                    
-            pstmt.setString(1, maHopDong);
+
+                    pstmt.setString(1, maHopDong);
                     pstmt.setInt(2, maDichVu);
                     pstmt.setDouble(3, Double.parseDouble(weight.replace(",", ".")));
                     pstmt.setDouble(4, Double.parseDouble(total.replaceAll("[^0-9]", "")));
                     pstmt.setString(5, note);
-                    
+
                     int result = pstmt.executeUpdate();
-                    
+
                     if (result > 0) {
                         conn.commit();
                         JOptionPane.showMessageDialog(this,
-                            "Thêm chi tiết hợp đồng thành công!",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
-                        
+                                "Thêm chi tiết hợp đồng thành công!",
+                                "Thông báo",
+                                JOptionPane.INFORMATION_MESSAGE);
+
                         // Refresh detail table
                         loadContractDetails(maHopDong, detailModel);
                     } else {
@@ -2637,9 +2719,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException | NumberFormatException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi thêm chi tiết hợp đồng: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi thêm chi tiết hợp đồng: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -2647,10 +2729,10 @@ public class ChuThaiUI extends JFrame {
         model.setRowCount(0);
         try {
             Connection conn = ConnectionJDBC.getConnection();
-            String sql = "SELECT dv.TenDichVu, dv.DonViTinh, ct.KhoiLuong, dv.DonGia, ct.ThanhTien, ct.GhiChu " +
-                        "FROM ChiTietHopDong ct " +
-                        "JOIN DichVu dv ON ct.MaDichVu = dv.MaDichVu " +
-                        "WHERE ct.MaHopDong = ?";
+            String sql = "SELECT dv.TenDichVu, dv.DonViTinh, ct.KhoiLuong, dv.DonGia, ct.ThanhTien, ct.GhiChu "
+                    + "FROM ChiTietHopDong ct "
+                    + "JOIN DichVu dv ON ct.MaDichVu = dv.MaDichVu "
+                    + "WHERE ct.MaHopDong = ?";
             PreparedStatement pstmt = conn.prepareStatement(sql);
             pstmt.setString(1, maHopDong);
             ResultSet rs = pstmt.executeQuery();
@@ -2670,38 +2752,38 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException e) {
             e.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải chi tiết hợp đồng: " + e.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải chi tiết hợp đồng: " + e.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void deleteContractDetail(String maHopDong, String maDichVu, DefaultTableModel detailModel) {
         int confirm = JOptionPane.showConfirmDialog(this,
-            "Bạn có chắc chắn muốn xóa chi tiết hợp đồng này không?",
-            "Xác nhận xóa",
-            JOptionPane.YES_NO_OPTION);
-            
+                "Bạn có chắc chắn muốn xóa chi tiết hợp đồng này không?",
+                "Xác nhận xóa",
+                JOptionPane.YES_NO_OPTION);
+
         if (confirm == JOptionPane.YES_OPTION) {
             try {
                 Connection conn = ConnectionJDBC.getConnection();
                 conn.setAutoCommit(false);
-                
+
                 try {
                     String sql = "DELETE FROM ChiTietHopDong WHERE MaHopDong = ? AND MaDichVu = ?";
                     PreparedStatement pstmt = conn.prepareStatement(sql);
                     pstmt.setString(1, maHopDong);
                     pstmt.setString(2, maDichVu);
-                    
+
                     int result = pstmt.executeUpdate();
-                    
+
                     if (result > 0) {
                         conn.commit();
                         JOptionPane.showMessageDialog(this,
-                            "Xóa chi tiết hợp đồng thành công!",
-                            "Thông báo",
-                            JOptionPane.INFORMATION_MESSAGE);
-                            
+                                "Xóa chi tiết hợp đồng thành công!",
+                                "Thông báo",
+                                JOptionPane.INFORMATION_MESSAGE);
+
                         // Refresh detail table
                         loadContractDetails(maHopDong, detailModel);
                     } else {
@@ -2714,12 +2796,12 @@ public class ChuThaiUI extends JFrame {
                     conn.setAutoCommit(true);
                     conn.close();
                 }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this,
-                    "Lỗi khi xóa chi tiết hợp đồng: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                JOptionPane.showMessageDialog(this,
+                        "Lỗi khi xóa chi tiết hợp đồng: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
@@ -2731,18 +2813,16 @@ public class ChuThaiUI extends JFrame {
                 return column == 4; // Chỉ cho phép edit cột nút xóa
             }
         };
-        
+
         detailModel.addColumn("Tên dịch vụ");
         detailModel.addColumn("Đơn vị tính");
         detailModel.addColumn("Khối lượng");
         detailModel.addColumn("Đơn giá");
         detailModel.addColumn("Thành tiền");
         detailModel.addColumn("Ghi chú");
-        
-        detailTable.setModel(detailModel);
-        
 
-        
+        detailTable.setModel(detailModel);
+
         // Set column widths
         detailTable.getColumnModel().getColumn(0).setPreferredWidth(150); // Tên dịch vụ
         detailTable.getColumnModel().getColumn(1).setPreferredWidth(100); // Đơn vị tính
@@ -2750,12 +2830,13 @@ public class ChuThaiUI extends JFrame {
         detailTable.getColumnModel().getColumn(3).setPreferredWidth(100); // Đơn giá
         detailTable.getColumnModel().getColumn(4).setPreferredWidth(100); // Thành tiền
         detailTable.getColumnModel().getColumn(5).setPreferredWidth(200); // Ghi chú
-        
+
         // Load data
         loadContractDetails(maHopDong, detailModel);
     }
 
     private class ButtonRenderer extends JButton implements TableCellRenderer {
+
         public ButtonRenderer(String text) {
             setText(text);
             setOpaque(true);
@@ -2771,6 +2852,7 @@ public class ChuThaiUI extends JFrame {
     }
 
     private class ButtonEditor extends DefaultCellEditor {
+
         protected JButton button;
         private String label;
         private boolean isPushed;
@@ -2784,7 +2866,7 @@ public class ChuThaiUI extends JFrame {
             button.setOpaque(true);
             button.setBackground(new Color(231, 76, 60));
             button.setForeground(Color.WHITE);
-            
+
             button.addActionListener(e -> {
                 fireEditingStopped();
                 action.accept(currentRow);
@@ -2841,7 +2923,7 @@ public class ChuThaiUI extends JFrame {
         mainPanel.add(new JLabel("Ngày bắt đầu:"), gbc);
 
         JSpinner dateSpinner = createSearchDateSpinner();
-        JPanel datePanel = (JPanel)dateSpinner.getClientProperty("parent.panel");
+        JPanel datePanel = (JPanel) dateSpinner.getClientProperty("parent.panel");
         gbc.gridx = 1;
         gbc.gridy = 1;
         gbc.weightx = 1.0;
@@ -2879,23 +2961,23 @@ public class ChuThaiUI extends JFrame {
         searchBtn.addActionListener(evt -> {
             try {
                 String maHd = maHdField.getText().trim();
-                Date ngayBd = dateCheckBox.isSelected() ? 
-                    (Date) ((SpinnerDateModel)dateSpinner.getModel()).getValue() : null;
+                Date ngayBd = dateCheckBox.isSelected()
+                        ? (Date) ((SpinnerDateModel) dateSpinner.getModel()).getValue() : null;
 
                 // Validate input - either ID or date must be provided
                 if (maHd.isEmpty() && !dateCheckBox.isSelected()) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng nhập mã hợp đồng hoặc chọn ngày để tìm kiếm.",
-                        "Thông báo",
-                        JOptionPane.WARNING_MESSAGE);
+                            "Vui lòng nhập mã hợp đồng hoặc chọn ngày để tìm kiếm.",
+                            "Thông báo",
+                            JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
                 StringBuilder sql = new StringBuilder(
-                    "SELECT h.MaHopDong, h.LoaiHopDong, h.DiaChiThuGom, h.NgBatDau, h.NgKetThuc, " +
-                    "DBMS_LOB.SUBSTR(h.MoTa, 4000, 1) as MoTa, h.TrangThai " +
-                    "FROM HopDong h " +
-                    "WHERE h.MaChuThai = ? ");
+                        "SELECT h.MaHopDong, h.LoaiHopDong, h.DiaChiThuGom, h.NgBatDau, h.NgKetThuc, "
+                        + "DBMS_LOB.SUBSTR(h.MoTa, 4000, 1) as MoTa, h.TrangThai "
+                        + "FROM HopDong h "
+                        + "WHERE h.MaChuThai = ? ");
 
                 List<Object> params = new ArrayList<>();
                 List<Integer> types = new ArrayList<>();
@@ -2920,7 +3002,7 @@ public class ChuThaiUI extends JFrame {
                 model.setRowCount(0);
                 Connection conn = ConnectionJDBC.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql.toString());
-                
+
                 for (int i = 0; i < params.size(); i++) {
                     pstmt.setObject(i + 1, params.get(i), types.get(i));
                 }
@@ -2946,19 +3028,19 @@ public class ChuThaiUI extends JFrame {
 
                 if (model.getRowCount() == 0) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Không tìm thấy kết quả nào.",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
+                            "Không tìm thấy kết quả nào.",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
                 } else {
-                dialog.dispose();
+                    dialog.dispose();
                 }
 
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(dialog,
-                    "Lỗi khi tìm kiếm: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Lỗi khi tìm kiếm: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -2974,14 +3056,14 @@ public class ChuThaiUI extends JFrame {
 
     private void loadContractData(DefaultTableModel model, String status) {
         model.setRowCount(0); // Xóa dữ liệu cũ
-        
+
         try {
             Connection conn = ConnectionJDBC.getConnection();
             StringBuilder sql = new StringBuilder(
-                "SELECT h.MaHopDong, h.LoaiHopDong, h.DiaChiThuGom, h.NgBatDau, h.NgKetThuc, " +
-                "DBMS_LOB.SUBSTR(h.MoTa, 4000, 1) as MoTa, h.TrangThai " +
-                "FROM HopDong h " +
-                "WHERE h.MaChuThai = ? "
+                    "SELECT h.MaHopDong, h.LoaiHopDong, h.DiaChiThuGom, h.NgBatDau, h.NgKetThuc, "
+                    + "DBMS_LOB.SUBSTR(h.MoTa, 4000, 1) as MoTa, h.TrangThai "
+                    + "FROM HopDong h "
+                    + "WHERE h.MaChuThai = ? "
             );
 
             if (!status.equals("Tất cả")) {
@@ -3016,9 +3098,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải danh sách hợp đồng: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải danh sách hợp đồng: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -3026,7 +3108,7 @@ public class ChuThaiUI extends JFrame {
         JPanel panel = new JPanel(new BorderLayout());
         JLabel label = new JLabel("Bạn có chắc chắn muốn đăng xuất?", JLabel.CENTER);
         label.setFont(new Font("Arial", Font.BOLD, 18));
-        
+
         JButton logoutButton = new JButton("Xác nhận đăng xuất");
         logoutButton.setBackground(new Color(231, 76, 60));
         logoutButton.setForeground(Color.WHITE);
@@ -3051,28 +3133,28 @@ public class ChuThaiUI extends JFrame {
         calendar.set(Calendar.SECOND, 0);
         calendar.set(Calendar.MILLISECOND, 0);
         Date initDate = calendar.getTime(); // Current date as initial value
-        
+
         // Set minimum date to 10 years in the past
         Calendar minCal = Calendar.getInstance();
         minCal.add(Calendar.YEAR, -10);
         Date minDate = minCal.getTime();
-        
+
         // Set maximum date to current date
         Date maxDate = calendar.getTime();
-        
+
         SpinnerDateModel dateModel = new SpinnerDateModel(initDate, minDate, maxDate, Calendar.DAY_OF_MONTH);
         JSpinner spinner = new JSpinner(dateModel);
-        
+
         // Custom date editor that allows editing year
         JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(spinner, "dd/MM/yyyy");
         spinner.setEditor(dateEditor);
-        
+
         // Allow direct text editing
         JFormattedTextField ftf = ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField();
         ftf.setEditable(true);
         ftf.setHorizontalAlignment(JTextField.LEFT);
         ftf.setFont(new Font("Arial", Font.PLAIN, 14));
-        
+
         // Add clear button
         JButton clearButton = new JButton("X");
         clearButton.setFont(new Font("Arial", Font.PLAIN, 10));
@@ -3082,15 +3164,15 @@ public class ChuThaiUI extends JFrame {
             dateModel.setValue(initDate); // Reset to current date instead of null
             ftf.setValue(initDate);
         });
-        
+
         // Create a panel to hold both spinner and clear button
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(spinner, BorderLayout.CENTER);
         panel.add(clearButton, BorderLayout.EAST);
-        
+
         // Store the panel as a client property of the spinner
         spinner.putClientProperty("parent.panel", panel);
-        
+
         return spinner;
     }
 
@@ -3104,27 +3186,25 @@ public class ChuThaiUI extends JFrame {
         calendar.set(Calendar.MILLISECOND, 0);
         Date initDate = calendar.getTime();
         Date minDate = calendar.getTime(); // Minimum date is tomorrow
-        
+
         Calendar maxCal = Calendar.getInstance();
         maxCal.add(Calendar.YEAR, 10); // Allow dates up to 10 years in the future
         Date maxDate = maxCal.getTime();
-        
+
         SpinnerDateModel dateModel = new SpinnerDateModel(initDate, minDate, maxDate, Calendar.DAY_OF_MONTH);
         JSpinner spinner = new JSpinner(dateModel);
-        
+
         JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(spinner, "dd/MM/yyyy");
         spinner.setEditor(dateEditor);
-        
+
         // Make the text field non-editable to prevent invalid input
         JFormattedTextField ftf = ((JSpinner.DefaultEditor) spinner.getEditor()).getTextField();
         ftf.setEditable(false);
         ftf.setHorizontalAlignment(JTextField.LEFT);
         ftf.setFont(new Font("Arial", Font.PLAIN, 14));
-        
+
         return spinner;
     }
-
-    
 
     private JPanel createHoaDonPanel() {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
@@ -3134,18 +3214,18 @@ public class ChuThaiUI extends JFrame {
         JPanel headerPanel = new JPanel(new BorderLayout());
         JLabel titleLabel = new JLabel("Xem hóa đơn");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
-        
+
         // Button panel
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton searchButton = new JButton("Tìm kiếm");
         JButton refreshButton = new JButton("Làm mới");
         JButton paymentButton = new JButton("Thanh toán");
-        
+
         // Style buttons
         searchButton.setBackground(new Color(46, 64, 83));
         searchButton.setForeground(Color.WHITE);
         searchButton.setFocusPainted(false);
-        
+
         refreshButton.setBackground(new Color(46, 64, 83));
         refreshButton.setForeground(Color.WHITE);
         refreshButton.setFocusPainted(false);
@@ -3154,11 +3234,11 @@ public class ChuThaiUI extends JFrame {
         paymentButton.setForeground(Color.WHITE);
         paymentButton.setFocusPainted(false);
         paymentButton.setEnabled(false); // Ban đầu disable nút thanh toán
-        
+
         buttonPanel.add(searchButton);
         buttonPanel.add(refreshButton);
         buttonPanel.add(paymentButton);
-        
+
         headerPanel.add(titleLabel, BorderLayout.WEST);
         headerPanel.add(buttonPanel, BorderLayout.EAST);
 
@@ -3193,7 +3273,7 @@ public class ChuThaiUI extends JFrame {
 
         invoiceTable = new JTable(model);
         JScrollPane scrollPane = new JScrollPane(invoiceTable);
-        
+
         // Load dữ liệu vào bảng
         loadInvoiceData(model, "Tất cả");
 
@@ -3222,7 +3302,7 @@ public class ChuThaiUI extends JFrame {
                 String maHoaDon = invoiceTable.getValueAt(selectedRow, 0).toString();
                 String soTien = invoiceTable.getValueAt(selectedRow, 3).toString();
                 String status = invoiceTable.getValueAt(selectedRow, 5).toString();
-                
+
                 if ("Chưa thanh toán".equals(status)) {
                     showQRPaymentDialog(maHoaDon, soTien, model, statusBox);
                 }
@@ -3244,31 +3324,31 @@ public class ChuThaiUI extends JFrame {
         // Panel chứa thông tin hóa đơn
         JPanel infoPanel = new JPanel(new GridLayout(3, 2, 10, 10));
         infoPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        
+
         infoPanel.add(new JLabel("Mã hóa đơn:"));
         infoPanel.add(new JLabel(maHoaDon));
-        
+
         infoPanel.add(new JLabel("Số tiền:"));
         infoPanel.add(new JLabel(soTien + " đ"));
-        
+
         infoPanel.add(new JLabel("Phương thức:"));
         infoPanel.add(new JLabel("Quét mã QR"));
 
         // Panel chứa hình QR
         JPanel qrPanel = new JPanel(new BorderLayout());
         qrPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-        
+
         // Load hình QR từ resources
         try {
             ImageIcon originalIcon = new ImageIcon(getClass().getResource("/Image/QR.jpg"));
             Image originalImage = originalIcon.getImage();
-            
+
             // Scale hình QR
             int qrSize = 250;
             Image scaledImage = originalImage.getScaledInstance(qrSize, qrSize, Image.SCALE_SMOOTH);
             JLabel qrLabel = new JLabel(new ImageIcon(scaledImage));
             qrLabel.setHorizontalAlignment(JLabel.CENTER);
-            
+
             qrPanel.add(qrLabel, BorderLayout.CENTER);
         } catch (Exception ex) {
             qrPanel.add(new JLabel("Không thể tải hình QR"), BorderLayout.CENTER);
@@ -3289,13 +3369,13 @@ public class ChuThaiUI extends JFrame {
 
         confirmButton.addActionListener(evt -> {
             int confirm = JOptionPane.showConfirmDialog(
-                dialog,
-                "Xác nhận đã thanh toán hóa đơn này?",
-                "Xác nhận thanh toán",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
+                    dialog,
+                    "Xác nhận đã thanh toán hóa đơn này?",
+                    "Xác nhận thanh toán",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE
             );
-            
+
             if (confirm == JOptionPane.YES_OPTION) {
                 updatePaymentStatus(maHoaDon, model, statusBox);
                 dialog.dispose();
@@ -3319,31 +3399,31 @@ public class ChuThaiUI extends JFrame {
         try {
             Connection conn = ConnectionJDBC.getConnection();
             conn.setAutoCommit(false);
-            
+
             try {
                 String sql = "UPDATE HoaDon SET TinhTrang = 'Đã thanh toán' WHERE MaHoaDon = ? AND TinhTrang = 'Chưa thanh toán'";
                 PreparedStatement pstmt = conn.prepareStatement(sql);
                 pstmt.setString(1, maHoaDon);
-                
+
                 int rowsAffected = pstmt.executeUpdate();
-                
+
                 if (rowsAffected > 0) {
                     conn.commit();
                     JOptionPane.showMessageDialog(this,
-                        "Cập nhật trạng thái thanh toán thành công!",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    
+                            "Cập nhật trạng thái thanh toán thành công!",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+
                     // Refresh table data
                     loadInvoiceData(model, statusBox.getSelectedItem().toString());
                 } else {
                     conn.rollback();
                     JOptionPane.showMessageDialog(this,
-                        "Không thể cập nhật trạng thái thanh toán!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Không thể cập nhật trạng thái thanh toán!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                 }
-                
+
                 pstmt.close();
             } catch (SQLException ex) {
                 conn.rollback();
@@ -3355,9 +3435,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi cập nhật trạng thái thanh toán: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi cập nhật trạng thái thanh toán: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -3378,11 +3458,11 @@ public class ChuThaiUI extends JFrame {
         // Panel thông tin chủ thải
         JPanel infoPanel = new JPanel(new GridBagLayout());
         infoPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(46, 64, 83), 1),
-            "Thông tin chủ thải",
-            javax.swing.border.TitledBorder.LEFT,
-            javax.swing.border.TitledBorder.TOP,
-            new Font("Arial", Font.BOLD, 14)
+                BorderFactory.createLineBorder(new Color(46, 64, 83), 1),
+                "Thông tin chủ thải",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Arial", Font.BOLD, 14)
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -3465,9 +3545,9 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải thông tin chủ thải: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải thông tin chủ thải: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
 
         // Thêm action listener cho nút cập nhật
@@ -3480,27 +3560,27 @@ public class ChuThaiUI extends JFrame {
 
             if (hoTen.isEmpty() || diaChi.isEmpty() || sdt.isEmpty() || email.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng điền đầy đủ thông tin!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Vui lòng điền đầy đủ thông tin!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             // Validate số điện thoại
             if (!sdt.matches("\\d{10}")) {
                 JOptionPane.showMessageDialog(this,
-                    "Số điện thoại không hợp lệ! Vui lòng nhập 10 chữ số.",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Số điện thoại không hợp lệ! Vui lòng nhập 10 chữ số.",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
             // Validate email
             if (!email.matches("^[A-Za-z0-9+_.-]+@(.+)$")) {
                 JOptionPane.showMessageDialog(this,
-                    "Email không hợp lệ!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Email không hợp lệ!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -3518,10 +3598,10 @@ public class ChuThaiUI extends JFrame {
                 int result = pstmt.executeUpdate();
                 if (result > 0) {
                     JOptionPane.showMessageDialog(this,
-                        "Cập nhật thông tin thành công!",
-                        "Thông báo",
-                        JOptionPane.INFORMATION_MESSAGE);
-                    
+                            "Cập nhật thông tin thành công!",
+                            "Thông báo",
+                            JOptionPane.INFORMATION_MESSAGE);
+
                     // Cập nhật tên hiển thị trên sidebar
                     tenKhachHang = hoTen;
                     updateSidebarUserInfo();
@@ -3532,9 +3612,9 @@ public class ChuThaiUI extends JFrame {
             } catch (SQLException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(this,
-                    "Lỗi khi cập nhật thông tin: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Lỗi khi cập nhật thông tin: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -3544,11 +3624,11 @@ public class ChuThaiUI extends JFrame {
         // Panel đổi mật khẩu (giữ nguyên code cũ)
         JPanel passwordPanel = new JPanel(new GridLayout(5, 2, 10, 10));
         passwordPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createLineBorder(new Color(46, 64, 83), 1),
-            "Đổi mật khẩu",
-            javax.swing.border.TitledBorder.LEFT,
-            javax.swing.border.TitledBorder.TOP,
-            new Font("Arial", Font.BOLD, 14)
+                BorderFactory.createLineBorder(new Color(46, 64, 83), 1),
+                "Đổi mật khẩu",
+                javax.swing.border.TitledBorder.LEFT,
+                javax.swing.border.TitledBorder.TOP,
+                new Font("Arial", Font.BOLD, 14)
         ));
 
         // Mật khẩu cũ
@@ -3573,7 +3653,7 @@ public class ChuThaiUI extends JFrame {
         JButton changePassButton = new JButton("Đổi mật khẩu");
         changePassButton.setBackground(new Color(46, 204, 113));
         changePassButton.setForeground(Color.WHITE);
-        
+
         // Thêm sự kiện cho nút đổi mật khẩu
         changePassButton.addActionListener(evt -> {
             String oldPass = new String(oldPassField.getPassword());
@@ -3583,18 +3663,18 @@ public class ChuThaiUI extends JFrame {
             // Kiểm tra các trường không được để trống
             if (oldPass.isEmpty() || newPass.isEmpty() || confirmPass.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
-                    "Vui lòng điền đầy đủ thông tin!",
-                    "Cảnh báo",
-                    JOptionPane.WARNING_MESSAGE);
+                        "Vui lòng điền đầy đủ thông tin!",
+                        "Cảnh báo",
+                        JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
             // Kiểm tra mật khẩu mới và xác nhận mật khẩu
             if (!newPass.equals(confirmPass)) {
                 JOptionPane.showMessageDialog(this,
-                    "Mật khẩu mới và xác nhận mật khẩu không khớp!",
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Mật khẩu mới và xác nhận mật khẩu không khớp!",
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -3609,9 +3689,9 @@ public class ChuThaiUI extends JFrame {
 
                     if (!rs.next()) {
                         JOptionPane.showMessageDialog(this,
-                            "Mật khẩu cũ không đúng!",
-                            "Lỗi",
-                            JOptionPane.ERROR_MESSAGE);
+                                "Mật khẩu cũ không đúng!",
+                                "Lỗi",
+                                JOptionPane.ERROR_MESSAGE);
                         return;
                     }
 
@@ -3624,9 +3704,9 @@ public class ChuThaiUI extends JFrame {
 
                         if (result > 0) {
                             JOptionPane.showMessageDialog(this,
-                                "Đổi mật khẩu thành công!",
-                                "Thông báo",
-                                JOptionPane.INFORMATION_MESSAGE);
+                                    "Đổi mật khẩu thành công!",
+                                    "Thông báo",
+                                    JOptionPane.INFORMATION_MESSAGE);
                             // Clear các trường
                             oldPassField.setText("");
                             newPassField.setText("");
@@ -3636,9 +3716,9 @@ public class ChuThaiUI extends JFrame {
                 }
             } catch (SQLException ex) {
                 JOptionPane.showMessageDialog(this,
-                    "Lỗi khi đổi mật khẩu: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Lỗi khi đổi mật khẩu: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
         });
@@ -3717,10 +3797,10 @@ public class ChuThaiUI extends JFrame {
 
         // Danh sách các loại rác cố định với màu sắc
         String[][] loaiRac = {
-            {"1", "Rác Hữu Cơ", "#4CAF50"},     // Green
-            {"2", "Rác Vô Cơ", "#2196F3"},     // Blue
-            {"3", "Rác Tái Chế", "#FF9800"},    // Orange
-            {"4", "Rác Nguy Hại", "#F44336"},   // Red
+            {"1", "Rác Hữu Cơ", "#4CAF50"}, // Green
+            {"2", "Rác Vô Cơ", "#2196F3"}, // Blue
+            {"3", "Rác Tái Chế", "#FF9800"}, // Orange
+            {"4", "Rác Nguy Hại", "#F44336"}, // Red
             {"5", "Các loại rác khác", "#9C27B0"} // Purple
         };
 
@@ -3729,7 +3809,7 @@ public class ChuThaiUI extends JFrame {
             buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
             buttonPanel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
             buttonPanel.setOpaque(false);
-            
+
             JButton itemButton = new JButton(loai[1]);
             itemButton.setHorizontalAlignment(SwingConstants.LEFT);
             itemButton.setFont(new Font("Arial", Font.BOLD, 14));
@@ -3739,7 +3819,7 @@ public class ChuThaiUI extends JFrame {
             itemButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
             itemButton.setBackground(Color.decode(loai[2]));
             itemButton.setForeground(Color.WHITE);
-            
+
             // Add hover effect
             itemButton.addMouseListener(new java.awt.event.MouseAdapter() {
                 public void mouseEntered(java.awt.event.MouseEvent evt) {
@@ -3750,14 +3830,14 @@ public class ChuThaiUI extends JFrame {
                     itemButton.setBackground(Color.decode(loai[2]));
                 }
             });
-            
+
             final String maLoai = loai[0];
-            
+
             // Add click event to show details
             itemButton.addActionListener(evt -> {
                 showWasteDetails(detailPanel, Integer.parseInt(maLoai));
             });
-            
+
             buttonPanel.add(itemButton);
             listPanel.add(buttonPanel);
             listPanel.add(Box.createVerticalStrut(5));
@@ -3765,7 +3845,7 @@ public class ChuThaiUI extends JFrame {
 
         // Tạo JSplitPane để chia màn hình thành 2 phần
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-                                            listScrollPane, detailScrollPane);
+                listScrollPane, detailScrollPane);
         splitPane.setDividerLocation(200);
         splitPane.setEnabled(false);
         splitPane.setOneTouchExpandable(false);
@@ -3776,64 +3856,84 @@ public class ChuThaiUI extends JFrame {
 
     private void showWasteDetails(JPanel detailPanel, int maLoai) {
         detailPanel.removeAll();
-        
+
         try {
             Connection conn = ConnectionJDBC.getConnection();
             String sql = "SELECT MoTa, HdPhanLoai FROM TtPhanLoaiRac WHERE MaLoaiRac = ?";
-            
+
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, maLoai);
                 ResultSet rs = pstmt.executeQuery();
-                
+
                 if (rs.next()) {
                     // Panel chứa tất cả nội dung
                     JPanel contentPanel = new JPanel();
                     contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
                     contentPanel.setBorder(new EmptyBorder(10, 10, 10, 10));
-                    
+
                     // Tạo panel cho tiêu đề
                     String tenLoai = "";
-                    switch(maLoai) {
-                        case 1: tenLoai = "Rác Hữu Cơ"; break;
-                        case 2: tenLoai = "Rác Vô Cơ"; break;
-                        case 3: tenLoai = "Rác Tái Chế"; break;
-                        case 4: tenLoai = "Rác Nguy Hại"; break;
-                        case 5: tenLoai = "Các loại rác khác"; break;
+                    switch (maLoai) {
+                        case 1:
+                            tenLoai = "Rác Hữu Cơ";
+                            break;
+                        case 2:
+                            tenLoai = "Rác Vô Cơ";
+                            break;
+                        case 3:
+                            tenLoai = "Rác Tái Chế";
+                            break;
+                        case 4:
+                            tenLoai = "Rác Nguy Hại";
+                            break;
+                        case 5:
+                            tenLoai = "Các loại rác khác";
+                            break;
                     }
-                    
+
                     JLabel titleLabel = new JLabel(tenLoai);
                     titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
                     titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
                     contentPanel.add(titleLabel);
                     contentPanel.add(Box.createVerticalStrut(20));
-                    
+
                     // Hiển thị hình ảnh từ package Image
                     String imageName = "";
-                    switch(maLoai) {
-                        case 1: imageName = "RacHuuCo.jpg"; break;
-                        case 2: imageName = "RacVoCo.jpg"; break;
-                        case 3: imageName = "RacTaiChe.jpg"; break;
-                        case 4: imageName = "RacNguyHai.jpg"; break;
-                        case 5: imageName = "RacKhac.jpg"; break;
+                    switch (maLoai) {
+                        case 1:
+                            imageName = "RacHuuCo.jpg";
+                            break;
+                        case 2:
+                            imageName = "RacVoCo.jpg";
+                            break;
+                        case 3:
+                            imageName = "RacTaiChe.jpg";
+                            break;
+                        case 4:
+                            imageName = "RacNguyHai.jpg";
+                            break;
+                        case 5:
+                            imageName = "RacKhac.jpg";
+                            break;
                     }
-                    
+
                     try {
                         ImageIcon originalIcon = new ImageIcon(getClass().getResource("/Image/" + imageName));
                         Image originalImage = originalIcon.getImage();
-                        
+
                         // Tạo BufferedImage mới với chất lượng cao
                         BufferedImage resizedImage = new BufferedImage(400, 300, BufferedImage.TYPE_INT_ARGB);
                         Graphics2D g2d = resizedImage.createGraphics();
-                        
+
                         // Thiết lập các thuộc tính để render hình ảnh chất lượng cao
                         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
                         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                        
+
                         // Vẽ hình ảnh với chất lượng cao
                         g2d.drawImage(originalImage, 0, 0, 400, 300, null);
                         g2d.dispose();
-                        
+
                         JLabel imageLabel = new JLabel(new ImageIcon(resizedImage));
                         imageLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
                         contentPanel.add(imageLabel);
@@ -3841,13 +3941,13 @@ public class ChuThaiUI extends JFrame {
                     } catch (Exception ex) {
                         System.err.println("Không thể tải hình ảnh: " + imageName);
                     }
-                    
+
                     // Hiển thị mô tả
                     JLabel descLabel = new JLabel("Mô tả:");
                     descLabel.setFont(new Font("Arial", Font.BOLD, 16));
                     descLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
                     contentPanel.add(descLabel);
-                    
+
                     JTextArea descArea = new JTextArea(rs.getString("MoTa"));
                     descArea.setWrapStyleWord(true);
                     descArea.setLineWrap(true);
@@ -3857,13 +3957,13 @@ public class ChuThaiUI extends JFrame {
                     descArea.setAlignmentX(Component.LEFT_ALIGNMENT);
                     contentPanel.add(descArea);
                     contentPanel.add(Box.createVerticalStrut(20));
-                    
+
                     // Hiển thị hướng dẫn phân loại
                     JLabel guideLabel = new JLabel("Hướng dẫn phân loại:");
                     guideLabel.setFont(new Font("Arial", Font.BOLD, 16));
                     guideLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
                     contentPanel.add(guideLabel);
-                    
+
                     JTextArea guideArea = new JTextArea(rs.getString("HdPhanLoai"));
                     guideArea.setWrapStyleWord(true);
                     guideArea.setLineWrap(true);
@@ -3872,19 +3972,19 @@ public class ChuThaiUI extends JFrame {
                     guideArea.setFont(new Font("Arial", Font.PLAIN, 14));
                     guideArea.setAlignmentX(Component.LEFT_ALIGNMENT);
                     contentPanel.add(guideArea);
-                    
+
                     // Thêm contentPanel vào detailPanel
                     detailPanel.add(contentPanel);
                 }
             }
         } catch (SQLException ex) {
             JOptionPane.showMessageDialog(null,
-                "Lỗi khi tải thông tin phân loại rác: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải thông tin phân loại rác: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
             ex.printStackTrace();
         }
-        
+
         detailPanel.revalidate();
         detailPanel.repaint();
     }
@@ -3903,9 +4003,9 @@ public class ChuThaiUI extends JFrame {
             double price = Double.parseDouble(priceStr);
             String weightStr = weightField.getText().trim().replace(".", "").replace(",", ".");
             double weight = Double.parseDouble(weightStr);
-            
+
             double total = price * weight;
-            totalLabel.setText(String.format("%,d VNĐ", (long)total));
+            totalLabel.setText(String.format("%,d VNĐ", (long) total));
         } catch (NumberFormatException | ArrayIndexOutOfBoundsException ex) {
             totalLabel.setText("0 VNĐ");
         }
@@ -3990,9 +4090,9 @@ public class ChuThaiUI extends JFrame {
                         // Validate dates
                         if (startDate.after(endDate)) {
                             JOptionPane.showMessageDialog(dialog,
-                                "Ngày bắt đầu không thể sau ngày kết thúc!",
-                                "Lỗi",
-                                JOptionPane.ERROR_MESSAGE);
+                                    "Ngày bắt đầu không thể sau ngày kết thúc!",
+                                    "Lỗi",
+                                    JOptionPane.ERROR_MESSAGE);
                             return;
                         }
 
@@ -4001,8 +4101,8 @@ public class ChuThaiUI extends JFrame {
                         String contractType = durationInDays > 180 ? "Dài hạn" : "Ngắn hạn";
 
                         // Update contract with new type
-                        String updateSql = "UPDATE HopDong SET NgBatDau = ?, NgKetThuc = ?, MoTa = ?, DiaChiThuGom = ?, LoaiHopDong = ? " +
-                                        "WHERE MaHopDong = ? AND TrangThai = 'Chờ duyệt'";
+                        String updateSql = "UPDATE HopDong SET NgBatDau = ?, NgKetThuc = ?, MoTa = ?, DiaChiThuGom = ?, LoaiHopDong = ? "
+                                + "WHERE MaHopDong = ? AND TrangThai = 'Chờ duyệt'";
                         PreparedStatement updateStmt = conn.prepareStatement(updateSql);
                         updateStmt.setDate(1, new java.sql.Date(startDate.getTime()));
                         updateStmt.setDate(2, new java.sql.Date(endDate.getTime()));
@@ -4014,23 +4114,23 @@ public class ChuThaiUI extends JFrame {
                         int result = updateStmt.executeUpdate();
                         if (result > 0) {
                             JOptionPane.showMessageDialog(dialog,
-                                "Cập nhật hợp đồng thành công!",
-                                "Thông báo",
-                                JOptionPane.INFORMATION_MESSAGE);
+                                    "Cập nhật hợp đồng thành công!",
+                                    "Thông báo",
+                                    JOptionPane.INFORMATION_MESSAGE);
                             loadContractData(contractModel, "Tất cả");
                             dialog.dispose();
                         } else {
                             JOptionPane.showMessageDialog(dialog,
-                                "Không thể cập nhật hợp đồng!",
-                                "Lỗi",
-                                JOptionPane.ERROR_MESSAGE);
+                                    "Không thể cập nhật hợp đồng!",
+                                    "Lỗi",
+                                    JOptionPane.ERROR_MESSAGE);
                         }
                     } catch (SQLException ex) {
                         ex.printStackTrace();
                         JOptionPane.showMessageDialog(dialog,
-                            "Lỗi khi cập nhật hợp đồng: " + ex.getMessage(),
-                            "Lỗi",
-                            JOptionPane.ERROR_MESSAGE);
+                                "Lỗi khi cập nhật hợp đồng: " + ex.getMessage(),
+                                "Lỗi",
+                                JOptionPane.ERROR_MESSAGE);
                     }
                 });
 
@@ -4050,15 +4150,15 @@ public class ChuThaiUI extends JFrame {
         } catch (SQLException ex) {
             ex.printStackTrace();
             JOptionPane.showMessageDialog(this,
-                "Lỗi khi tải thông tin hợp đồng: " + ex.getMessage(),
-                "Lỗi",
-                JOptionPane.ERROR_MESSAGE);
+                    "Lỗi khi tải thông tin hợp đồng: " + ex.getMessage(),
+                    "Lỗi",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void showEditDetailDialog(String maHopDong, String currentDichVu, 
-                                    double currentKhoiLuong, String currentGhiChu, 
-                                    DefaultTableModel detailModel) {
+    private void showEditDetailDialog(String maHopDong, String currentDichVu,
+            double currentKhoiLuong, String currentGhiChu,
+            DefaultTableModel detailModel) {
         JDialog dialog = new JDialog(this, "Sửa chi tiết hợp đồng", true);
         dialog.setLayout(new BorderLayout(10, 10));
         dialog.setSize(500, 300);
@@ -4139,7 +4239,7 @@ public class ChuThaiUI extends JFrame {
                     return;
                 }
             }
-            
+
             @Override
             public void keyReleased(java.awt.event.KeyEvent e) {
                 calculateTotal(serviceBox, weightField, totalLabel);
@@ -4165,30 +4265,30 @@ public class ChuThaiUI extends JFrame {
         saveButton.addActionListener(e -> {
             try {
                 // Validate input
-                if (serviceBox.getSelectedItem() == null || 
-                    serviceBox.getSelectedItem().toString().equals("-- Chọn dịch vụ --")) {
+                if (serviceBox.getSelectedItem() == null
+                        || serviceBox.getSelectedItem().toString().equals("-- Chọn dịch vụ --")) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng chọn dịch vụ!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Vui lòng chọn dịch vụ!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 String weightText = weightField.getText().trim().replace(',', '.');
                 if (weightText.isEmpty()) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Vui lòng nhập khối lượng!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Vui lòng nhập khối lượng!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
                 double weight = Double.parseDouble(weightText);
                 if (weight <= 0) {
                     JOptionPane.showMessageDialog(dialog,
-                        "Khối lượng phải lớn hơn 0!",
-                        "Lỗi",
-                        JOptionPane.ERROR_MESSAGE);
+                            "Khối lượng phải lớn hơn 0!",
+                            "Lỗi",
+                            JOptionPane.ERROR_MESSAGE);
                     return;
                 }
 
@@ -4197,37 +4297,37 @@ public class ChuThaiUI extends JFrame {
 
                 try {
                     String serviceName = serviceBox.getSelectedItem().toString().split(" - ")[0];
-                    
+
                     // Get MaDichVu
                     String findServiceSql = "SELECT MaDichVu FROM DichVu WHERE TenDichVu = ?";
                     PreparedStatement findServiceStmt = conn.prepareStatement(findServiceSql);
                     findServiceStmt.setString(1, serviceName);
                     ResultSet rs = findServiceStmt.executeQuery();
-                    
+
                     if (rs.next()) {
                         int maDichVu = rs.getInt("MaDichVu");
-                        
+
                         // Update chi tiết hợp đồng
-                        String updateSql = "UPDATE ChiTietHopDong " +
-                                        "SET KhoiLuong = ?, ThanhTien = ?, GhiChu = ? " +
-                                        "WHERE MaHopDong = ? AND MaDichVu = ?";
+                        String updateSql = "UPDATE ChiTietHopDong "
+                                + "SET KhoiLuong = ?, ThanhTien = ?, GhiChu = ? "
+                                + "WHERE MaHopDong = ? AND MaDichVu = ?";
                         PreparedStatement pstmt = conn.prepareStatement(updateSql);
-                        
+
                         pstmt.setDouble(1, weight);
                         pstmt.setDouble(2, Double.parseDouble(totalLabel.getText().replaceAll("[^0-9]", "")));
                         pstmt.setString(3, noteField.getText());
                         pstmt.setString(4, maHopDong);
                         pstmt.setInt(5, maDichVu);
-                        
+
                         int result = pstmt.executeUpdate();
-                        
+
                         if (result > 0) {
                             conn.commit();
                             JOptionPane.showMessageDialog(dialog,
-                                "Cập nhật chi tiết hợp đồng thành công!",
-                                "Thông báo",
-                                JOptionPane.INFORMATION_MESSAGE);
-                            
+                                    "Cập nhật chi tiết hợp đồng thành công!",
+                                    "Thông báo",
+                                    JOptionPane.INFORMATION_MESSAGE);
+
                             // Refresh detail table
                             loadContractDetails(maHopDong, detailModel);
                             dialog.dispose();
@@ -4247,9 +4347,9 @@ public class ChuThaiUI extends JFrame {
             } catch (SQLException | NumberFormatException ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(dialog,
-                    "Lỗi khi cập nhật chi tiết hợp đồng: " + ex.getMessage(),
-                    "Lỗi",
-                    JOptionPane.ERROR_MESSAGE);
+                        "Lỗi khi cập nhật chi tiết hợp đồng: " + ex.getMessage(),
+                        "Lỗi",
+                        JOptionPane.ERROR_MESSAGE);
             }
         });
 
@@ -4262,4 +4362,4 @@ public class ChuThaiUI extends JFrame {
         dialog.add(buttonPanel, BorderLayout.SOUTH);
         dialog.setVisible(true);
     }
-} 
+}
